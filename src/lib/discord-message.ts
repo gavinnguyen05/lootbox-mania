@@ -5,7 +5,8 @@ import type { RollResult } from "./types";
  *
  * ## __Results from [2] Loot Boxes__ <@123>
  * `  1x Fun Dip [COMMON]` [49.0%, DUPE - MAXED 😭]
- * [📋 See full checklist here](<https://site/players/slug>)
+ *
+ * [See full checklist here](<https://site/players/slug>) 📋
  */
 export function discordMessage(results: RollResult[], siteUrl: string): string {
   const first = results[0];
@@ -24,5 +25,5 @@ export function discordMessage(results: RollResult[], siteUrl: string): string {
   });
 
   // The <> around the URL stops Discord from adding a preview card.
-  return [head, ...lines, `[📋 See full checklist here](<${siteUrl}/players/${first.player_slug}>)`].join("\n");
+  return [head, ...lines, "", `[See full checklist here](<${siteUrl}/players/${first.player_slug}>) 📋`].join("\n");
 }

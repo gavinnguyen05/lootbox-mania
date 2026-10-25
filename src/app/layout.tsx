@@ -11,6 +11,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Lootbox Mania",
   description: "Lootbox Royale III checklist tracker.",
+  icons: { icon: "/assets/lootbox-mania-logo.png", apple: "/assets/lootbox-mania-logo.png" },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -19,9 +20,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <a className="skip" href="#main">Skip to content</a>
         <header className="site-header">
-          <Link href="/" className="brand" aria-label="Lootbox Mania home">
-            <Image src="/assets/lootbox-mania-logo.png" alt="" width={52} height={52} className="brand-logo" priority />
-            <span className="brand-text">Lootbox Mania</span>
+          <Link href="/" className="brand">
+            {/* Height is fixed by CSS; width follows the image's own shape. */}
+            <Image src="/assets/lootbox-royale.png" alt="Lootbox Royale" width={240} height={80} className="brand-logo" priority />
           </Link>
           <Nav />
         </header>

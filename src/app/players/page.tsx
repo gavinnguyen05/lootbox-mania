@@ -5,6 +5,7 @@ import { progress } from "@/lib/progress";
 import { claimWindowInfo } from "@/lib/time";
 import Avatar from "@/components/Avatar";
 import BoxesBadge from "@/components/BoxesBadge";
+import PlayerSearch from "@/components/PlayerSearch";
 import { StatusBadge } from "@/components/Status";
 
 export const metadata = { title: "Players | Lootbox Mania" };
@@ -24,8 +25,9 @@ export default async function PlayersPage() {
   return (
     <div className="page players-page">
       <h1 className="page-title players-title">Players</h1>
-      <ul className="player-list">
-        {rows.map(({ p, collected, total }) => (
+      <PlayerSearch
+        searchText={rows.map(({ p }) => `${displayName(p)} ${p.discord_username ?? ""}`)}
+        cards={rows.map(({ p, collected, total }) => (
           <li key={p.id}>
             <Link href={`/players/${p.slug}`} className="panel player-card" prefetch={false}>
               <Avatar src={p.discord_avatar_url} name={displayName(p)} size={52} />
@@ -40,8 +42,7 @@ export default async function PlayersPage() {
             </Link>
           </li>
         ))}
-      </ul>
-      {players.length === 0 && <p className="empty">No players found.</p>}
+      />
     </div>
   );
 }
