@@ -76,8 +76,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
   display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 16px;
 }
 .brand { display: flex; align-items: center; gap: 8px; text-decoration: none; min-height: var(--tap); }
-.brand-logo { width: 40px; height: 40px; object-fit: contain; }
-.brand-text { font-size: 21px; font-weight: 700; line-height: 1; color: var(--orange); text-shadow: 2px 2px 0 #4b1f8a; white-space: nowrap; }
+.brand-logo { height: 40px; width: auto; max-width: 70vw; object-fit: contain; }
 
 /* Phones: nav is a full-width row of three equal tabs under the logo. */
 .nav { display: flex; width: 100%; border-bottom: 1px solid var(--line); }
@@ -92,8 +91,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 
 @media (min-width: 600px) {
   .site-header { padding: 14px 20px 0; flex-wrap: nowrap; border-bottom: 1px solid var(--line); }
-  .brand-logo { width: 52px; height: 52px; }
-  .brand-text { font-size: 26px; }
+  .brand-logo { height: 52px; }
   .nav { width: auto; border-bottom: 0; gap: 4px; align-self: stretch; }
   .nav a { flex: none; padding: 0 14px; font-size: 17px; }
 }
@@ -159,8 +157,6 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .drop-row:last-child { border-bottom: 0; }
 .drop-main { display: flex; flex-direction: column; min-width: 0; }
 .drop-name { font-size: 16px; line-height: 1.25; overflow-wrap: anywhere; }
-.drop-name a { font-weight: 700; text-decoration: none; }
-.drop-name a:hover { text-decoration: underline; }
 /* Rarity, copy tag, and time share one wrapping line: "Rare · New · Today · 8:04 PM" */
 .drop-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 8px; margin-top: 2px; font-family: var(--ui); font-size: 13px; color: var(--muted); }
 .drop-rarity.r-uncommon { color: var(--uncommon); }
@@ -170,12 +166,50 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .drop-row .candy-icon { margin-top: 1px; }
 .drop-row.undone .drop-name { text-decoration: line-through; opacity: .6; }
 
+/* Activity feed (home Recent Drops, admin Activity):
+   [avatar]  Player name             (who)
+             [candy] Candy  Rarity   (what: the focus)
+             Today · 8:04 PM         (when) */
+.feed-list { list-style: none; margin: 0; padding: 0; }
+.feed-row { display: grid; grid-template-columns: 40px minmax(0, 1fr); column-gap: 10px; align-items: start; padding: 9px 0; border-bottom: 1px solid var(--line); }
+.feed-row:last-child { border-bottom: 0; }
+.feed-avatar { display: block; width: 40px; height: 40px; border-radius: 50%; }
+.feed-avatar .avatar { width: 40px; height: 40px; }
+.feed-body { min-width: 0; display: grid; gap: 1px; }
+/* Who: one line, ellipsis for long names (full name on hover via title).
+   Padding gives the link a taller tap area without adding visible space. */
+.feed-player {
+  justify-self: start; max-width: 100%;
+  font-size: 14px; font-weight: 700; color: #cfcdd9; text-decoration: none;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  padding: 2px 0; margin: -2px 0;
+}
+a.feed-player:hover { color: var(--text); text-decoration: underline; }
+/* What: the candy leads; rarity is a small colored word, not a badge. */
+.feed-drop { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 7px; min-width: 0; }
+.feed-drop .candy-icon { width: 24px; height: 24px; }
+.feed-candy { font-size: 16px; line-height: 1.25; color: var(--text); min-width: 0; overflow-wrap: anywhere; }
+.feed-rarity { font-family: var(--ui); font-size: 12px; color: var(--muted); }
+.feed-rarity.r-uncommon { color: var(--uncommon); }
+.feed-rarity.r-rare { color: var(--rare); }
+.feed-rarity.r-legendary { color: var(--gold); }
+.feed-rarity.r-cursed { color: var(--red); }
+.flag-new { color: var(--gold); border-color: #6b5714; }
+/* When */
+.feed-time { font-family: var(--ui); font-size: 12px; color: var(--muted); }
+.feed-row.undone .feed-candy { text-decoration: line-through; opacity: .6; }
+
 /* ---------- Home ---------- */
 .home-hero { display: grid; gap: 12px; margin-bottom: 18px; }
 .home-intro { color: var(--muted); max-width: 64ch; }
-.window-box { padding: 10px 12px; border: 1px solid var(--line-strong); border-radius: var(--radius); background: var(--panel-2); }
-.window-box strong { color: var(--gold); }
-.window-box .muted { font-family: var(--ui); font-size: 14px; margin-top: 2px; }
+/* Current window: label → name → hours → facts, each one step quieter. */
+.window-box { margin-top: 12px; padding: 12px 14px; border: 1px solid var(--line-strong); border-left: 3px solid var(--gold); border-radius: var(--radius); background: var(--panel-2); }
+.window-label { font-family: var(--ui); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.window-name { font-size: 22px; font-weight: 700; line-height: 1.2; color: var(--gold); }
+.window-hours { font-family: var(--ui); font-size: 14px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.window-facts { display: flex; flex-wrap: wrap; gap: 4px 16px; margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--line); font-family: var(--ui); font-size: 14px; color: var(--muted); }
+.window-facts span { display: inline-flex; align-items: center; gap: 5px; }
+.window-facts strong { color: var(--text); font-weight: 700; }
 .home-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .stat { padding: 10px 12px; }
 .stat-num { font-size: 28px; font-weight: 700; line-height: 1.1; }
@@ -273,4 +307,5 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .loading::before { content: ""; width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--line-strong); border-top-color: var(--purple); animation: spin .8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .loading::before { animation: none; } }
-.players-title { margin-bottom: 12px; }
+.players-title { margin-bottom: 10px; }
+.player-search { margin-bottom: 12px; max-width: 420px; }

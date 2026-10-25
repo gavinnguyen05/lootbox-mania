@@ -7,6 +7,7 @@ import Avatar from "@/components/Avatar";
 import BoxesBadge from "@/components/BoxesBadge";
 import DropList from "@/components/DropList";
 import LocalTime from "@/components/LocalTime";
+import LootboxIcon from "@/components/LootboxIcon";
 import { StatusBadge } from "@/components/Status";
 
 
@@ -24,12 +25,17 @@ export default async function Home() {
         <div>
           <h1 className="page-title">Lootbox Royale III</h1>
           <p className="home-intro">Open lootboxes, collect candy, and complete your Candy Checklist to restore Trick-or-Treating.</p>
-          <div className="window-box">
-            <p>
-              Current window: <strong>{win.name}</strong> (<LocalTime iso={win.startIso} mode="time" />–<LocalTime iso={win.lastMinuteIso} mode="time" zone />)
+          <section className="window-box" aria-labelledby="window-h">
+            <p className="window-label" id="window-h">Current window</p>
+            <p className="window-name">{win.name}</p>
+            <p className="window-hours">
+              <LocalTime iso={win.startIso} mode="time" />–<LocalTime iso={win.lastMinuteIso} mode="time" zone />
             </p>
-            <p className="muted">2 boxes available. Next refill: <LocalTime iso={win.endIso} mode="time" /></p>
-          </div>
+            <div className="window-facts">
+              <span><LootboxIcon /> <strong>2 boxes</strong> per player</span>
+              <span>Next refill <strong><LocalTime iso={win.endIso} mode="time" /></strong></span>
+            </div>
+          </section>
         </div>
         <div className="home-stats">
           <div className="panel stat stat-trapped">

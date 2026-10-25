@@ -96,6 +96,7 @@
 .result-card.r-rare .result-rarity { color: var(--rare); }
 .result-card.r-legendary .result-rarity { color: var(--gold); }
 .result-card.r-cursed .result-rarity { color: var(--red); }
+.result-odds { font-family: var(--ui); font-size: 14px; color: var(--muted); margin-top: -6px; }
 .result-name { font-size: 28px; font-weight: 700; line-height: 1.05; text-transform: uppercase; overflow-wrap: anywhere; }
 .result-tag { font-weight: 700; font-size: 17px; border: 2px solid var(--line-strong); border-radius: var(--radius); padding: 3px 12px; }
 .result-note { font-size: 14px; color: var(--muted); font-style: italic; }
@@ -103,7 +104,8 @@
   .result-card { flex: 1 1 280px; max-width: 420px; padding: 26px 20px 28px; border-radius: 14px; }
   .result-card .candy-icon { width: 170px; height: 170px; }
   .result-rarity { font-size: 20px; }
-  .result-name { font-size: 36px; }
+  .result-odds { font-family: var(--ui); font-size: 14px; color: var(--muted); margin-top: -6px; }
+.result-name { font-size: 36px; }
   .result-tag { font-size: 19px; }
 }
 .tag-green { color: var(--uncommon); border-color: #2b7a39; }
