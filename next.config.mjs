@@ -24,6 +24,8 @@ const nextConfig = {
       { source: "/:path*", headers: security },
       // Logo, candy art, and icons rarely change. Live game data is never cached.
       { source: "/assets/:path*", headers: [{ key: "Cache-Control", value: "public, max-age=86400, stale-while-revalidate=604800" }] },
+      // Font files never change.
+      { source: "/fonts/:path*", headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }] },
     ];
   },
 

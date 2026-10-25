@@ -61,6 +61,6 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  // Pages only. Static files, optimized images, and /assets skip middleware.
-  matcher: ["/((?!_next/static|_next/image|assets/|favicon.ico).*)"],
+  // Pages only. Static files, optimized images, /assets, and /fonts skip middleware.
+  matcher: ["/((?!_next/static|_next/image|assets/|fonts/|favicon.ico).*)"],
 };

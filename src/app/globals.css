@@ -1,3 +1,21 @@
+/* Comic Neue: a free Comic Sans lookalike for phones, which don't have
+   Comic Sans. Listed after Comic Sans, so devices that have Comic Sans never
+   download it. Served from our own site (no font CDN). */
+@font-face {
+  font-family: "Comic Neue";
+  src: url("/fonts/comic-neue-400.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Comic Neue";
+  src: url("/fonts/comic-neue-700.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* Mobile-first. Base styles are for ~320–430px phones. Wider screens are
    added with min-width queries at 600px (large phones, small tablets),
    900px (tablets), and 1200px (desktop). */
@@ -20,7 +38,7 @@
   --purple: #a47cf9;
   --purple-bg: #221a38;
   --orange: #f59e0b;
-  --font: "Comic Sans MS", "Comic Sans", cursive;
+  --font: "Comic Sans MS", "Comic Sans", "Comic Neue", sans-serif;
   --ui: Arial, Helvetica, system-ui, sans-serif;
   --radius: 8px;
   --tap: 44px;
