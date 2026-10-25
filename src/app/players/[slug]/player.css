@@ -1,0 +1,120 @@
+/* Player dashboard, mobile-first. Phone order: identity, status, checklist
+   (Common, Uncommon, Rare, Special), then Recent Drops and Robert's Rule. */
+.pd { --check-on: #3e8f4a; }
+.pd p { margin: 0; }
+
+/* Identity */
+.pd-identity { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; min-width: 0; }
+.pd-identity .avatar { border: 3px solid var(--purple); width: 64px; height: 64px; }
+.pd-identity > div { min-width: 0; }
+.pd-player-name { font-size: 22px; font-weight: 700; line-height: 1.1; overflow-wrap: anywhere; }
+.pd-identity-line { display: flex; align-items: center; gap: 4px 10px; flex-wrap: wrap; margin-top: 4px; }
+.pd-username { font-family: var(--ui); color: var(--muted); font-size: 14px; overflow-wrap: anywhere; }
+.pd-identity .status { font-size: 14px; }
+
+/* Status strip */
+.pd-strip { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 6px; border: 1px solid; margin-bottom: 14px; }
+.pd-strip.trapped { background: #1d1214; border-color: #4e2226; }
+.pd-strip.escaped { background: #111c13; border-color: #24492a; }
+.pd-strip-icon { width: 30px; height: 30px; object-fit: contain; flex: none; }
+.pd-strip-title { font-size: 15px; font-weight: 700; line-height: 1.2; }
+.pd-strip.trapped .pd-strip-title { color: #ec8585; }
+.pd-strip.escaped .pd-strip-title { color: #7fd889; }
+.pd-strip-sub { font-family: var(--ui); font-size: 13px; color: var(--muted); }
+
+.pd-card { background: var(--panel-2); border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; min-width: 0; }
+
+/* Phones: one column, natural order. */
+.pd-layout { display: grid; gap: 10px; }
+.pd-checklist { display: grid; gap: 10px; min-width: 0; }
+.pd-side { display: grid; gap: 10px; margin-top: 4px; }
+
+/* Checklist header */
+.pd-checklist-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.pd-checklist-head h2 { font-size: 21px; font-weight: 700; }
+.pd-total { font-family: var(--ui); font-size: 14px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+/* Tier cards */
+.pd-tiers { display: grid; gap: 10px; }
+.pd-tier-head { display: flex; align-items: center; gap: 8px; padding-bottom: 6px; margin-bottom: 4px; border-bottom: 1px solid var(--line-strong); }
+.pd-tier-head .dot { width: 16px; height: 16px; }
+.pd-tier-head h3 { font-size: 18px; font-weight: 700; flex: 1; }
+.pd-tier.r-uncommon h3 { color: var(--uncommon); }
+.pd-tier.r-rare h3 { color: var(--rare); }
+.pd-tier-count { font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+/* Rows: [check] [icon] name ... Copies. Names wrap; nothing is cut off. */
+.pd-rows { list-style: none; margin: 0; padding: 0; display: grid; }
+.pd-row { display: grid; grid-template-columns: 20px 28px minmax(0, 1fr) auto; column-gap: 8px; align-items: center; min-height: 38px; padding: 2px 0; }
+.pd-icon { width: 28px; display: inline-flex; justify-content: center; align-items: center; flex: none; }
+.pd .candy-icon { width: 28px; height: 28px; }
+.pd-name { font-size: 16px; line-height: 1.2; overflow-wrap: anywhere; }
+.pd-row.missing .pd-name { color: #d6d4e0; }
+.pd-copies { font-family: var(--ui); font-size: 13px; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.pd-row.excluded > :not(.pd-note) { opacity: .5; }
+.pd-note { grid-column: 3 / -1; font-family: var(--ui); font-size: 13px; color: var(--muted); margin: -2px 0 4px; }
+/* Very narrow phones: Copies drops under the name instead of squeezing it. */
+@media (max-width: 359px) {
+  .pd-row { grid-template-columns: 20px 28px minmax(0, 1fr); }
+  .pd-copies { grid-column: 3; margin-top: -4px; }
+  .pd-copies:empty { display: none; }
+}
+
+.pd-check {
+  width: 20px; height: 20px; border-radius: 4px; border: 1.5px solid #6a6878;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-family: var(--ui); font-size: 13px; font-weight: 700; line-height: 1; color: #e3f7e6;
+}
+.pd-check.on { background: var(--check-on); border-color: var(--check-on); }
+
+/* Special */
+.pd-special-title { display: flex; align-items: center; gap: 8px; font-size: 18px; font-weight: 700; color: var(--gold); margin-bottom: 4px; }
+.pd-special-title .dot { width: 14px; height: 14px; }
+.pd-special-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.pd-special-item { display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; column-gap: 8px; align-items: center; }
+.pd-special-text { display: flex; flex-direction: column; min-width: 0; }
+.pd-effect { font-family: var(--ui); font-size: 13px; color: var(--muted); }
+.pd-special-state { font-family: var(--ui); font-size: 13px; color: var(--muted); text-align: right; }
+.pd-special-state.pulled { font-weight: 700; color: var(--gold); }
+.pd-special-item.r-cursed .pd-special-state.pulled { color: var(--red); }
+
+/* Recent drops: shared DropList, slightly tighter here */
+.pd-recent h2 { font-size: 18px; font-weight: 700; padding-bottom: 6px; border-bottom: 1px solid var(--line-strong); color: #d6d4e0; }
+.pd-recent .drop-row { padding: 8px 0; }
+.pd-recent .drop-name { font-size: 15px; }
+.pd-view-all { display: inline-flex; align-items: center; min-height: var(--tap); font-family: var(--ui); font-size: 14px; color: var(--purple); }
+.pd-view-all:hover { color: #c0a4ff; }
+
+/* Robert's Rule IV card */
+.pd-rule-head { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+.pd-rule-icon { width: 44px; height: auto; flex: none; }
+.pd-rule h2 { font-size: 17px; font-weight: 700; color: var(--gold); line-height: 1.15; }
+.pd-rule p { font-family: var(--ui); font-size: 14px; line-height: 1.45; color: var(--muted); }
+
+/* Tablets: bigger header, Special side by side, drops + rule side by side. */
+@media (min-width: 600px) {
+  .pd-identity { gap: 16px; }
+  .pd-identity .avatar { width: 84px; height: 84px; }
+  .pd-player-name { font-size: 28px; }
+  .pd-checklist-head h2 { font-size: 24px; }
+  .pd-special-list { grid-template-columns: 1fr 1fr; gap: 6px 24px; }
+  .pd-side { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; }
+}
+
+/* Wide tablets and up: the three rarity cards sit in a row. */
+@media (min-width: 900px) {
+  .pd-tiers { grid-template-columns: 36fr 33fr 31fr; }
+  .pd-identity .avatar { width: 92px; height: 92px; }
+  .pd-player-name { font-size: 32px; }
+}
+
+/* Desktop: checklist left, drops + rule in a side column aligned with the cards.
+   The checklist's children join this grid so the side column starts at the cards. */
+@media (min-width: 1200px) {
+  .pd-layout { grid-template-columns: minmax(0, 1fr) 240px; grid-template-rows: auto auto 1fr; column-gap: 16px; row-gap: 10px; align-items: start; }
+  .pd-checklist { display: contents; }
+  .pd-checklist-head { grid-column: 1; grid-row: 1; }
+  .pd-tiers { grid-column: 1; grid-row: 2; }
+  .pd-special { grid-column: 1; grid-row: 3; }
+  .pd-side { grid-column: 2; grid-row: 2 / 4; grid-template-columns: 1fr; margin-top: 0; }
+}
