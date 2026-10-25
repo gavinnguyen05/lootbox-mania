@@ -22,7 +22,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <header className="site-header">
           <Link href="/" className="brand">
             {/* Height is fixed by CSS; width follows the image's own shape. */}
-            <Image src="/assets/lootbox-royale.png" alt="Lootbox Royale" width={240} height={80} className="brand-logo" priority />
+            <Image src="/assets/lootboxroyale.png" alt="Lootbox Royale" width={240} height={80} className="brand-logo" priority />
           </Link>
           <Nav />
         </header>

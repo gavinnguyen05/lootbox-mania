@@ -30,7 +30,12 @@ export default async function PlayerPage({ params }: Params) {
 
   return (
     <div className="pd">
-      <Link href="/players" className="back-link" prefetch={false}>← All players</Link>
+      <Link href="/players" className="back-link" prefetch={false}>
+        <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden>
+          <path d="M10 3 5 8l5 5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+        All players
+      </Link>
       <header className="pd-identity">
         <Avatar src={player.discord_avatar_url} name={name} size={92} priority />
         <div>

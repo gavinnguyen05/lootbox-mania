@@ -141,8 +141,16 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .boxes-pill .lootbox-icon { width: 14px; height: 14px; }
 
 /* Back link above a page's content */
-.back-link { display: inline-flex; align-items: center; min-height: var(--tap); margin-top: -6px; font-family: var(--ui); font-size: 15px; color: var(--muted); text-decoration: none; }
-.back-link:hover { color: var(--text); }
+/* Back link: a quiet pill with a drawn chevron, in the site font. */
+.back-link {
+  display: inline-flex; align-items: center; gap: 6px;
+  min-height: 36px; padding: 4px 14px 4px 10px; margin-bottom: 12px;
+  border: 1px solid var(--line-strong); border-radius: 999px; background: var(--panel-2);
+  font-size: 15px; color: var(--muted); text-decoration: none;
+}
+.back-link svg { color: var(--purple); flex: none; }
+.back-link:hover { color: var(--text); border-color: var(--purple); }
+@media (pointer: coarse) { .back-link { min-height: var(--tap); } }
 
 /* Text links with a comfortable tap area */
 .view-all { display: inline-flex; align-items: center; min-height: var(--tap); color: var(--purple); font-size: 16px; }
