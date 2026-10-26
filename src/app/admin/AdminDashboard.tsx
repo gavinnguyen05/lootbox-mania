@@ -16,6 +16,7 @@ import CandyIcon from "@/components/CandyIcon";
 import DropList from "@/components/DropList";
 import LocalTime from "@/components/LocalTime";
 import LootboxIcon from "@/components/LootboxIcon";
+import { copyElementAsImage } from "@/lib/copy-image";
 import { StatusBadge } from "@/components/Status";
 import {
   addPlayer, openBoxes, resetProgress, setActive, setItem, setStatus, syncProfiles, undoLastRoll,
@@ -166,6 +167,8 @@ function OpenTab({ players, items, itemsById, rolls, used, selected, onSelect, s
   const busyRef = useRef(false); // blocks a second click before React re-renders
   const [result, setResult] = useState<OpenResult | null>(null);
   const [copied, setCopied] = useState(false);
+  const [imageState, setImageState] = useState<"idle" | "copying" | "copied">("idle");
+  const shotRef = useRef<HTMLElement>(null);
 
   function pick(id: string) {
     onSelect(id);
@@ -191,6 +194,7 @@ function OpenTab({ players, items, itemsById, rolls, used, selected, onSelect, s
 
   const open = (count: 1 | 2) => selected && run(async () => {
     setCopied(false);
+    setImageState("idle");
     // Fresh idempotency keys per click. Only the server decides the result.
     const res = await openBoxes(selected.id, Array.from({ length: count }, () => crypto.randomUUID()));
     setResult(res);
@@ -201,6 +205,18 @@ function OpenTab({ players, items, itemsById, rolls, used, selected, onSelect, s
     setFlash(await undoLastRoll(selected.id));
     setResult(null);
   });
+
+  async function copyImage() {
+    if (!shotRef.current || imageState === "copying") return;
+    setImageState("copying");
+    try {
+      await copyElementAsImage(shotRef.current);
+      setImageState("copied");
+    } catch {
+      setImageState("idle");
+      setFlash({ ok: false, error: "Couldn't copy the image. Try again, or use Chrome, Edge, or Safari." });
+    }
+  }
 
   async function copy() {
     if (!result?.discordText) return;
@@ -245,11 +261,16 @@ function OpenTab({ players, items, itemsById, rolls, used, selected, onSelect, s
 
           {shown && shown.results.length > 0 && (
             <>
-              <ResultShot results={shown.results} player={selected} />
+              <ResultShot ref={shotRef} results={shown.results} player={selected} />
               <div className="panel discord-box">
                 <div className="discord-head">
                   <h3>For Discord</h3>
-                  <button className="btn btn-sm btn-primary" onClick={copy}>{copied ? "Copied" : "Copy"}</button>
+                  <div className="discord-buttons">
+                    <button className="btn btn-sm btn-orange" onClick={copyImage} disabled={imageState === "copying"}>
+                      {imageState === "copying" ? "Copying..." : imageState === "copied" ? "Image copied" : "Copy image"}
+                    </button>
+                    <button className="btn btn-sm btn-primary" onClick={copy}>{copied ? "Text copied" : "Copy text"}</button>
+                  </div>
                 </div>
                 <textarea className="input discord-text" readOnly aria-label="Discord message"
                   value={shown.discordText} rows={shown.discordText.split("\n").length + 1} />
@@ -274,10 +295,10 @@ function OpenTab({ players, items, itemsById, rolls, used, selected, onSelect, s
 }
 
 /** Self-contained result panel, sized to screenshot and post in Discord. */
-function ResultShot({ results, player }: { results: RollResult[]; player: AdminPlayer }) {
+function ResultShot({ results, player, ref }: { results: RollResult[]; player: AdminPlayer; ref?: React.Ref<HTMLElement> }) {
   const last = results[results.length - 1];
   return (
-    <section className="shot" aria-label="Roll results">
+    <section className="shot" aria-label="Roll results" ref={ref}>
       <div className="shot-head">
         <Avatar src={player.discord_avatar_url} name={displayName(player)} size={52} />
         <div className="shot-who">

@@ -121,7 +121,8 @@
 @media (prefers-reduced-motion: reduce) { .result-card { animation: none; } }
 
 .discord-box { display: grid; gap: 8px; min-width: 0; }
-.discord-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.discord-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+.discord-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
 .discord-head h3, .mini-title { font-size: 17px; font-weight: 700; }
 .mini-title { margin-bottom: 6px; }
 .discord-text { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 13px; resize: vertical; }
