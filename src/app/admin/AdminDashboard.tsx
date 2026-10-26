@@ -280,7 +280,7 @@ function OpenTab({ players, items, itemsById, rolls, used, selected, onSelect, s
 
           {shown && shown.results.length > 0 && (
             <>
-              <ResultShot ref={shotRef} results={shown.results} player={selected} />
+              <ResultShot ref={shotRef} results={shown.results} player={selected} items={items} />
               <div className="panel discord-box">
                 <div className="discord-head">
                   <h3>For Discord</h3>
@@ -314,8 +314,14 @@ function OpenTab({ players, items, itemsById, rolls, used, selected, onSelect, s
 }
 
 /** Self-contained result panel, sized to screenshot and post in Discord. */
-function ResultShot({ results, player, ref }: { results: RollResult[]; player: AdminPlayer; ref?: React.Ref<HTMLElement> }) {
+function ResultShot({ results, player, items, ref }: {
+  results: RollResult[]; player: AdminPlayer; items: Item[]; ref?: React.Ref<HTMLElement>;
+}) {
   const last = results[results.length - 1];
+  const pr = progress(items, player.player_lootbox_items);
+  // Player data reloads just after a roll. Show the per-rarity breakdown only
+  // once it agrees with the roll's own total, so an image is never half-stale.
+  const fresh = pr.collected === last.checklist_collected;
   return (
     <section className="shot" aria-label="Roll results" ref={ref}>
       <div className="shot-head">
@@ -324,9 +330,23 @@ function ResultShot({ results, player, ref }: { results: RollResult[]; player: A
           <span className="shot-name">{displayName(player)}</span>
           <span className="shot-sub">opened {results.length} loot box{results.length === 1 ? "" : "es"}</span>
         </div>
-        <span className={`shot-progress${last.status === "escaped" ? " escaped" : ""}`}>
-          {last.status === "escaped" ? "✅ ESCAPED" : `Checklist ${last.checklist_collected}/10`}
-        </span>
+        {last.status === "escaped" ? (
+          <span className="shot-progress escaped">✅ ESCAPED</span>
+        ) : (
+          <div className="shot-progress">
+            <span className="shot-total">Checklist {last.checklist_collected}/10</span>
+            {fresh && (
+              <span className="shot-tiers">
+                {CHECKLIST_RARITIES.map((rarity) => (
+                  <span key={rarity} className={`shot-tier ${RARITY[rarity].className}`}>
+                    <span className={`dot dot-${rarity}`} aria-hidden />
+                    {RARITY[rarity].label} {pr.byRarity[rarity].collected}/{pr.byRarity[rarity].total}
+                  </span>
+                ))}
+              </span>
+            )}
+          </div>
+        )}
       </div>
       <div className="shot-cards">
         {results.map((r) => <ResultCard key={r.roll_id} r={r} />)}
