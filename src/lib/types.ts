@@ -29,6 +29,7 @@ export interface Player {
   discord_avatar_url: string | null;
   lootbox_status: LootboxStatus;
   escaped_via: "checklist" | "golden_kitkat" | "manual" | null;
+  bonus_boxes: number;
 }
 
 export interface PlayerWithItems extends Player {

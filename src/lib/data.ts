@@ -9,7 +9,7 @@ import type { AdminAction, AdminPlayer, Item, PlayerWithItems, Roll } from "./ty
 // Explicit columns only. Public queries can't use * anyway: the anon key is
 // only granted these columns.
 const ITEM_COLS = "id, name, rarity, base_probability, required, sort_order, icon_path, active";
-const PLAYER_COLS = "id, slug, discord_username, discord_display_name, discord_avatar_url, lootbox_status, escaped_via";
+const PLAYER_COLS = "id, slug, discord_username, discord_display_name, discord_avatar_url, lootbox_status, escaped_via, bonus_boxes";
 const PLAYER_ITEM_COLS = "item_id, times_rolled, collected, excluded_by_roberts_rule, first_rolled_at";
 const ROLL_COLS = "id, player_id, item_id, rarity, rolled_at, times_rolled_after, was_new_item, triggered_roberts_rule, triggered_completion, triggered_reset";
 
@@ -56,10 +56,10 @@ export async function getRollPage(playerId: string, page: number) {
   return { rolls: rows.slice(0, DROPS_PER_PAGE), hasMore: rows.length > DROPS_PER_PAGE };
 }
 
-/** Boxes opened per player in a claim window (undone rolls give the box back). */
+/** Regular boxes opened per player in a claim window. Undone and bonus rolls don't count. */
 export async function getWindowUsage(windowKey: string, db: SupabaseClient = publicClient()): Promise<Record<string, number>> {
   const rows: { player_id: string }[] = must(
-    await db.from("lootbox_rolls").select("player_id").eq("claim_window", windowKey).eq("undone", false),
+    await db.from("lootbox_rolls").select("player_id").eq("claim_window", windowKey).eq("undone", false).eq("used_bonus", false),
   );
   const used: Record<string, number> = {};
   for (const r of rows) used[r.player_id] = (used[r.player_id] ?? 0) + 1;

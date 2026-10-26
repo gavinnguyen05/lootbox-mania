@@ -39,6 +39,9 @@ const GAME_ERRORS: Record<string, string> = {
   NOTHING_TO_UNDO: "No roll to undo.",
   MANUAL_EDIT_AFTER_ROLL: "This player was edited by hand after their last roll. Undo would erase that edit, so fix it manually instead.",
   ITEM_NOT_FOUND: "Item not found.",
+  NO_BONUS_TO_REMOVE: "This player has no bonus boxes to remove.",
+  TOO_MANY_BONUS: "That's the most bonus boxes a player can hold (99).",
+  INVALID_COUNT: "Invalid number.",
 };
 
 /** Turn any failure into a safe message. Unknown errors are logged, never shown. */
@@ -115,6 +118,20 @@ export async function undoLastRoll(playerId: unknown): Promise<ActionResult> {
     const data = await rpc<{ roll_id: number }>("undo_last_roll", { p_player_id: v.uuid(playerId, "player") });
     refreshPages();
     return { ok: true, notice: `Undid roll #${data.roll_id}.` };
+  } catch (e) {
+    return fail(e);
+  }
+}
+
+/** +1 or -1 bonus box. Bonus boxes never expire and are used after the window's 2. */
+export async function grantBox(playerId: unknown, delta: unknown): Promise<ActionResult> {
+  try {
+    await requireAdmin();
+    const d = v.int(delta, -1, 1, "change");
+    if (d === 0) throw new v.InvalidInput("Invalid change.");
+    const now = await rpc<number>("admin_grant_box", { p_player_id: v.uuid(playerId, "player"), p_delta: d });
+    refreshPages();
+    return { ok: true, notice: d > 0 ? `Added a bonus box (${now} bonus).` : `Removed a bonus box (${now} bonus).` };
   } catch (e) {
     return fail(e);
   }

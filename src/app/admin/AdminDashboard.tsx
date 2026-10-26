@@ -17,9 +17,10 @@ import DropList from "@/components/DropList";
 import LocalTime from "@/components/LocalTime";
 import LootboxIcon from "@/components/LootboxIcon";
 import { copyElementAsImage } from "@/lib/copy-image";
+import { boxesLeft } from "@/lib/boxes";
 import { StatusBadge } from "@/components/Status";
 import {
-  addPlayer, openBoxes, resetProgress, setActive, setItem, setStatus, syncProfiles, undoLastRoll,
+  addPlayer, grantBox, openBoxes, resetProgress, setActive, setItem, setStatus, syncProfiles, undoLastRoll,
   type ActionResult, type OpenResult,
 } from "./actions";
 import { signOut } from "../login/actions";
@@ -133,7 +134,7 @@ function PlayerPicker({ players, items, selectedId, onSelect, used }: {
       )}
       <ul className="picker-list">
         {list.map((p) => {
-          const left = used ? Math.max(0, 2 - (used[p.id] ?? 0)) : null;
+          const left = used ? boxesLeft(p, used[p.id] ?? 0) : null;
           return (
             <li key={p.id}>
               <button className={`picker-row${p.id === selectedId ? " active" : ""}`} aria-pressed={p.id === selectedId} onClick={() => choose(p.id)}>
@@ -218,13 +219,17 @@ function OpenTab({ players, items, itemsById, rolls, used, selected, onSelect, s
     }
   }
 
+  const changeBonus = (delta: 1 | -1) => selected && run(async () => {
+    setFlash(await grantBox(selected.id, delta));
+  });
+
   async function copy() {
     if (!result?.discordText) return;
     await navigator.clipboard.writeText(result.discordText);
     setCopied(true);
   }
 
-  const left = selected ? Math.max(0, 2 - (used[selected.id] ?? 0)) : 0;
+  const left = selected ? boxesLeft(selected, used[selected.id] ?? 0) : 0;
   const escaped = selected?.lootbox_status === "escaped";
   const playerRolls = selected ? rolls.filter((r) => r.player_id === selected.id && !r.undone).slice(0, 5) : [];
   const shown = result && selected && result.results[0]?.player_id === selected.id ? result : null;
@@ -246,8 +251,22 @@ function OpenTab({ players, items, itemsById, rolls, used, selected, onSelect, s
             <div className={`boxes-left${left === 0 ? " none" : ""}`}>
               <span className="boxes-num">{escaped ? "✓" : left}</span>
               <span className="muted small">{escaped ? "escaped" : "boxes left now"}</span>
+              {!escaped && selected.bonus_boxes > 0 && <span className="bonus-note">incl. {selected.bonus_boxes} bonus</span>}
             </div>
           </div>
+
+          {!escaped && (
+            <div className="bonus-row">
+              <span className="bonus-label">
+                Bonus boxes: <strong>{selected.bonus_boxes}</strong>
+                <span className="muted"> (never expire, used after the window&apos;s 2)</span>
+              </span>
+              <span className="bonus-buttons">
+                <button className="btn btn-sm" disabled={busy || selected.bonus_boxes < 1} onClick={() => changeBonus(-1)} aria-label="Remove one bonus box">−1</button>
+                <button className="btn btn-sm btn-primary" disabled={busy} onClick={() => changeBonus(1)}>+1 box</button>
+              </span>
+            </div>
+          )}
 
           <div className="open-actions">
             <button className="btn btn-primary btn-big" disabled={busy || escaped || left < 1} onClick={() => open(1)}>
@@ -569,6 +588,7 @@ function summarize(a: AdminAction): string {
     return `${m.item_id}: ×${o.times_rolled}→×${n.times_rolled}, collected ${o.collected}→${n.collected}, excluded ${o.excluded}→${n.excluded}`;
   }
   if (a.action_type === "set_status") return `${m.old} → ${m.new}`;
+  if (a.action_type === "grant_box" || a.action_type === "remove_box") return `bonus ${m.old} → ${m.new}`;
   if (a.action_type === "undo_roll") return `roll #${m.roll_id} (${m.item_id})`;
   if (a.action_type === "sync_profiles") return `updated ${m.updated}`;
   return "";

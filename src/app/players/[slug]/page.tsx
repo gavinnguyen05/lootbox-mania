@@ -5,6 +5,7 @@ import { displayName } from "@/lib/names";
 import { claimWindowInfo } from "@/lib/time";
 import Avatar from "@/components/Avatar";
 import BoxesBadge from "@/components/BoxesBadge";
+import { boxesLeft } from "@/lib/boxes";
 import Checklist from "@/components/Checklist";
 import DropList from "@/components/DropList";
 import PlayerStatusStrip from "@/components/PlayerStatusStrip";
@@ -43,7 +44,7 @@ export default async function PlayerPage({ params }: Params) {
           <p className="pd-identity-line">
             {player.discord_username && <span className="pd-username">@{player.discord_username}</span>}
             <StatusBadge player={player} />
-            {player.lootbox_status === "trapped" && <BoxesBadge left={2 - (used[player.id] ?? 0)} nextIso={win.endIso} />}
+            {player.lootbox_status === "trapped" && <BoxesBadge left={boxesLeft(player, used[player.id] ?? 0)} nextIso={win.endIso} />}
           </p>
         </div>
       </header>

@@ -5,6 +5,7 @@ import { progress } from "@/lib/progress";
 import { claimWindowInfo } from "@/lib/time";
 import Avatar from "@/components/Avatar";
 import BoxesBadge from "@/components/BoxesBadge";
+import { boxesLeft } from "@/lib/boxes";
 import DropList from "@/components/DropList";
 import LocalTime from "@/components/LocalTime";
 import LootboxIcon from "@/components/LootboxIcon";
@@ -56,15 +57,16 @@ export default async function Home() {
           <ul className="player-list">
             {players.map((p) => {
               const pr = progress(items, p.player_lootbox_items);
+              const left = boxesLeft(p, used[p.id] ?? 0);
               return (
               <li key={p.id}>
-                <Link href={`/players/${p.slug}`} className="panel player-card" prefetch={false}>
+                <Link href={`/players/${p.slug}`} className={`panel player-card${left > 0 ? " has-boxes" : ""}`} prefetch={false}>
                   <Avatar src={p.discord_avatar_url} name={displayName(p)} size={44} />
                   <span className="player-card-text">
                     <span className="player-card-name">{displayName(p)}</span>
                     <StatusBadge player={p} progress={`${pr.collected}/${pr.total}`} />
                     {p.lootbox_status === "trapped" && (
-                      <span className="player-card-boxes"><BoxesBadge left={2 - (used[p.id] ?? 0)} nextIso={win.endIso} /></span>
+                      <span className="player-card-boxes"><BoxesBadge left={left} nextIso={win.endIso} /></span>
                     )}
                   </span>
                 </Link>

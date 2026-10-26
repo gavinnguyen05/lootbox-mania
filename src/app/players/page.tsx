@@ -5,6 +5,7 @@ import { progress } from "@/lib/progress";
 import { claimWindowInfo } from "@/lib/time";
 import Avatar from "@/components/Avatar";
 import BoxesBadge from "@/components/BoxesBadge";
+import { boxesLeft } from "@/lib/boxes";
 import PlayerSearch from "@/components/PlayerSearch";
 import { StatusBadge } from "@/components/Status";
 
@@ -27,21 +28,24 @@ export default async function PlayersPage() {
       <h1 className="page-title players-title">Players</h1>
       <PlayerSearch
         searchText={rows.map(({ p }) => `${displayName(p)} ${p.discord_username ?? ""}`)}
-        cards={rows.map(({ p, collected, total }) => (
+        cards={rows.map(({ p, collected, total }) => {
+          const left = boxesLeft(p, used[p.id] ?? 0);
+          return (
           <li key={p.id}>
-            <Link href={`/players/${p.slug}`} className="panel player-card" prefetch={false}>
+            <Link href={`/players/${p.slug}`} className={`panel player-card${left > 0 ? " has-boxes" : ""}`} prefetch={false}>
               <Avatar src={p.discord_avatar_url} name={displayName(p)} size={52} />
               <span className="player-card-text">
                 <span className="player-card-name">{displayName(p)}</span>
                 {p.discord_username && <span className="player-card-user">@{p.discord_username}</span>}
                 <StatusBadge player={p} progress={p.lootbox_status === "trapped" ? `${collected}/${total}` : undefined} />
                 {p.lootbox_status === "trapped" && (
-                  <span className="player-card-boxes"><BoxesBadge left={2 - (used[p.id] ?? 0)} nextIso={win.endIso} /></span>
+                  <span className="player-card-boxes"><BoxesBadge left={left} nextIso={win.endIso} /></span>
                 )}
               </span>
             </Link>
           </li>
-        ))}
+          );
+        })}
       />
     </div>
   );
