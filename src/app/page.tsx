@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { byId, getItems, getPlayers, getRecentRolls, getWindowUsage } from "@/lib/data";
+import { byId, getEscapeTimes, getItems, getPlayers, getRecentRolls, getWindowUsage } from "@/lib/data";
 import { displayName } from "@/lib/names";
 import { progress } from "@/lib/progress";
 import { claimWindowInfo } from "@/lib/time";
@@ -7,6 +7,7 @@ import Avatar from "@/components/Avatar";
 import BoxesBadge from "@/components/BoxesBadge";
 import { boxesLeft } from "@/lib/boxes";
 import DropList from "@/components/DropList";
+import EscapedList from "@/components/EscapedList";
 import LocalTime from "@/components/LocalTime";
 import LootboxIcon from "@/components/LootboxIcon";
 import { StatusBadge } from "@/components/Status";
@@ -14,9 +15,9 @@ import { StatusBadge } from "@/components/Status";
 
 export default async function Home() {
   const win = claimWindowInfo();
-  // Four independent queries, run in parallel (no waterfall).
-  const [items, players, rolls, used] = await Promise.all([
-    getItems(), getPlayers(), getRecentRolls(8), getWindowUsage(win.key),
+  // Independent queries, run in parallel (no waterfall).
+  const [items, players, rolls, used, escapeTimes] = await Promise.all([
+    getItems(), getPlayers(), getRecentRolls(8), getWindowUsage(win.key), getEscapeTimes(),
   ]);
   const escaped = players.filter((p) => p.lootbox_status === "escaped").length;
 
@@ -77,10 +78,13 @@ export default async function Home() {
           {players.length === 0 && <p className="empty">No players found.</p>}
         </section>
 
-        <aside className="panel drops-card" aria-labelledby="drops-h">
-          <h2 id="drops-h">Recent Drops</h2>
-          <DropList rolls={rolls} items={byId(items)} players={byId(players)} empty="No recent drops yet." />
-        </aside>
+        <div className="home-side">
+          <EscapedList players={players} times={escapeTimes} />
+          <aside className="panel drops-card" aria-labelledby="drops-h">
+            <h2 id="drops-h">Recent Drops</h2>
+            <DropList rolls={rolls} items={byId(items)} players={byId(players)} empty="No recent drops yet." />
+          </aside>
+        </div>
       </div>
     </div>
   );

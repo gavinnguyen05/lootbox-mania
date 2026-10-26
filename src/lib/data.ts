@@ -66,6 +66,19 @@ export async function getWindowUsage(windowKey: string, db: SupabaseClient = pub
   return used;
 }
 
+/**
+ * When each player escaped, from the roll that got them out (checklist
+ * finished or Golden KitKat). Manual escapes have no roll, so no time.
+ */
+export async function getEscapeTimes(): Promise<Record<string, string>> {
+  const rows: { player_id: string; rolled_at: string }[] = must(
+    await publicClient().from("lootbox_rolls").select("player_id, rolled_at").eq("triggered_completion", true).order("rolled_at"),
+  );
+  const times: Record<string, string> = {};
+  for (const r of rows) times[r.player_id] = r.rolled_at; // latest wins if they escaped more than once
+  return times;
+}
+
 /** Everything the admin dashboard needs, in parallel. Service role, admin only. */
 export async function getAdminData(windowKey: string) {
   const db = serviceClient();
