@@ -25,7 +25,7 @@ export default async function Home() {
     <div className="page">
       <div className="home-hero">
         <div>
-          <h1 className="page-title">Lootbox Royale III</h1>
+          <h1 className="page-title">Home</h1>
           <p className="home-intro">Open lootboxes, collect candy, and complete your Candy Checklist to restore Trick-or-Treating.</p>
           <section className="window-box" aria-labelledby="window-h">
             <p className="window-label" id="window-h">Current window</p>
