@@ -12,6 +12,9 @@ export async function copyElementAsImage(el: HTMLElement): Promise<void> {
   const png = toBlob(el, {
     pixelRatio: 2, // sharp on high-DPI screens and in Discord's zoom view
     cacheBust: false,
+    // Every image here is "/_next/image?url=...". Without this the library
+    // caches by path alone, so all candies and avatars become the first one.
+    includeQueryParams: true,
     // Transparent: drop the panel's own background and border in the copy only.
     style: { background: "transparent", border: "none", boxShadow: "none" },
   }).then((blob) => {

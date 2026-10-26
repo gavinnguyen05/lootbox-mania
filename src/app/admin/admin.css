@@ -91,12 +91,12 @@
 .result-card.r-legendary { border-color: var(--gold); background: #2a2310; }
 .result-card.r-cursed { border-color: var(--red); background: var(--red-bg); }
 .result-card .candy-icon { width: 120px; height: 120px; filter: drop-shadow(0 6px 10px rgba(0, 0, 0, .45)); }
-.result-rarity { font-weight: 700; font-size: 17px; letter-spacing: 1.5px; }
+.result-rarity { font-weight: 700; font-size: 17px; letter-spacing: 1.5px; white-space: nowrap; }
 .result-card.r-uncommon .result-rarity { color: var(--uncommon); }
 .result-card.r-rare .result-rarity { color: var(--rare); }
 .result-card.r-legendary .result-rarity { color: var(--gold); }
 .result-card.r-cursed .result-rarity { color: var(--red); }
-.result-odds { font-family: var(--ui); font-size: 14px; color: var(--muted); margin-top: -6px; }
+.result-odds { font-family: var(--ui); font-size: 14px; color: var(--muted); margin-top: -4px; }
 .result-name { font-size: 28px; font-weight: 700; line-height: 1.05; text-transform: uppercase; overflow-wrap: anywhere; }
 .result-tag { font-weight: 700; font-size: 17px; border: 2px solid var(--line-strong); border-radius: var(--radius); padding: 3px 12px; }
 .result-note { font-size: 14px; color: var(--muted); font-style: italic; }
@@ -104,7 +104,7 @@
   .result-card { flex: 1 1 280px; max-width: 420px; padding: 26px 20px 28px; border-radius: 14px; }
   .result-card .candy-icon { width: 170px; height: 170px; }
   .result-rarity { font-size: 20px; }
-  .result-odds { font-family: var(--ui); font-size: 14px; color: var(--muted); margin-top: -6px; }
+  .result-odds { font-family: var(--ui); font-size: 14px; color: var(--muted); margin-top: -4px; }
 .result-name { font-size: 36px; }
   .result-tag { font-size: 19px; }
 }
