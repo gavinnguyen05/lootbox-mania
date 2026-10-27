@@ -1,16 +1,12 @@
-import Link from "next/link";
 import { byId, getEscapeTimes, getItems, getPlayers, getRecentRolls, getWindowUsage } from "@/lib/data";
-import { displayName } from "@/lib/names";
-import { progress } from "@/lib/progress";
 import { claimWindowInfo } from "@/lib/time";
-import Avatar from "@/components/Avatar";
-import BoxesBadge from "@/components/BoxesBadge";
 import { boxesLeft } from "@/lib/boxes";
 import DropList from "@/components/DropList";
+import PlayerCard from "@/components/PlayerCard";
+import { rankPlayers } from "@/lib/ranking";
 import EscapedList from "@/components/EscapedList";
 import LocalTime from "@/components/LocalTime";
 import LootboxIcon from "@/components/LootboxIcon";
-import { StatusBadge } from "@/components/Status";
 
 
 export default async function Home() {
@@ -20,6 +16,7 @@ export default async function Home() {
     getItems(), getPlayers(), getRecentRolls(8), getWindowUsage(win.key), getEscapeTimes(),
   ]);
   const escaped = players.filter((p) => p.lootbox_status === "escaped").length;
+  const ranked = rankPlayers(players, items, escapeTimes);
 
   return (
     <div className="page">
@@ -27,9 +24,9 @@ export default async function Home() {
         <div>
           <h1 className="page-title">Home</h1>
           <p className="home-intro">Open lootboxes, collect candy, and complete your Candy Checklist to restore Trick-or-Treating.</p>
-          <section className="window-box" aria-labelledby="window-h">
+          <section className={`window-box window-${win.period}`} aria-labelledby="window-h">
             <p className="window-label" id="window-h">Current window</p>
-            <p className="window-name">{win.name}</p>
+            <p className="window-name"><span aria-hidden>{win.period === "day" ? "☀️" : "🌙"}</span> {win.name}</p>
             <p className="window-hours">
               <LocalTime iso={win.startIso} mode="time" />–<LocalTime iso={win.lastMinuteIso} mode="time" zone />
             </p>
@@ -54,26 +51,13 @@ export default async function Home() {
       <div className="home-grid">
         <section aria-labelledby="dir-h">
           <h2 id="dir-h" className="section-title home-section-title">Players</h2>
-          <p className="section-sub">Use each player card to check their current progress and see whether they&apos;re still trapped or already escaped.</p>
+          <p className="section-sub">Ranked by how close each player is to escaping. Tap a card to see their checklist.</p>
           <ul className="player-list">
-            {players.map((p) => {
-              const pr = progress(items, p.player_lootbox_items);
-              const left = boxesLeft(p, used[p.id] ?? 0);
-              return (
-              <li key={p.id}>
-                <Link href={`/players/${p.slug}`} className={`panel player-card${left > 0 ? " has-boxes" : ""}`} prefetch={false}>
-                  <Avatar src={p.discord_avatar_url} name={displayName(p)} size={44} />
-                  <span className="player-card-text">
-                    <span className="player-card-name">{displayName(p)}</span>
-                    <StatusBadge player={p} progress={`${pr.collected}/${pr.total}`} />
-                    {p.lootbox_status === "trapped" && (
-                      <span className="player-card-boxes"><BoxesBadge left={left} nextIso={win.endIso} /></span>
-                    )}
-                  </span>
-                </Link>
+            {ranked.map((row) => (
+              <li key={row.player.id}>
+                <PlayerCard row={row} boxesLeft={boxesLeft(row.player, used[row.player.id] ?? 0)} nextIso={win.endIso} avatarSize={44} />
               </li>
-              );
-            })}
+            ))}
           </ul>
           {players.length === 0 && <p className="empty">No players found.</p>}
         </section>

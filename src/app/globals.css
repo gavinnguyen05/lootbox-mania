@@ -228,6 +228,11 @@ a.feed-player:hover { color: var(--text); text-decoration: underline; }
 .window-box { margin-top: 12px; padding: 12px 14px; border: 1px solid var(--line-strong); border-left: 3px solid var(--ready); border-radius: var(--radius); background: var(--panel-2); }
 .window-label { font-family: var(--ui); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
 .window-name { font-size: 22px; font-weight: 700; line-height: 1.2; color: var(--ready); }
+/* Day = sky blue, evening = indigo. */
+.window-day { border-left-color: #7cc4ff; }
+.window-day .window-name { color: #7cc4ff; }
+.window-evening { border-left-color: #9b8cff; }
+.window-evening .window-name { color: #9b8cff; }
 .window-hours { font-family: var(--ui); font-size: 14px; color: var(--muted); font-variant-numeric: tabular-nums; }
 .window-facts { display: flex; flex-wrap: wrap; gap: 4px 16px; margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--line); font-family: var(--ui); font-size: 14px; color: var(--muted); }
 .window-facts span { display: inline-flex; align-items: center; gap: 5px; }
@@ -282,6 +287,12 @@ a.feed-player:hover { color: var(--text); text-decoration: underline; }
 .player-card-text { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; min-width: 0; }
 .player-card-name { font-weight: 700; font-size: 17px; line-height: 1.2; overflow-wrap: anywhere; }
 .player-card-user { color: var(--muted); font-family: var(--ui); font-size: 13px; overflow-wrap: anywhere; }
+.player-card-estimate { font-family: var(--ui); font-size: 13px; color: var(--text); }
+/* Rank: small number before the avatar; top 3 stand out a little. */
+.player-rank { flex: none; min-width: 26px; text-align: center; font-family: var(--ui); font-size: 14px; font-weight: 700; color: var(--muted); font-variant-numeric: tabular-nums; }
+.player-rank.top-1 { color: #f2f2f7; font-size: 16px; }
+.player-rank.top-2, .player-rank.top-3 { color: #d6d4e0; }
+.ranking-note { color: var(--muted); font-family: var(--ui); font-size: 14px; margin-bottom: 10px; max-width: 70ch; }
 @media (min-width: 600px) { .player-list { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; } }
 @media (min-width: 1200px) { .players-page .player-list { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 

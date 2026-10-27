@@ -42,6 +42,7 @@ export function claimWindowInfo(now = new Date()) {
   return {
     key: claimWindowKey(now),
     name: evening ? "Evening drop" : "Day drop",
+    period: (evening ? "evening" : "day") as "day" | "evening",
     startIso: new Date(start).toISOString(),
     lastMinuteIso: new Date(end - 60_000).toISOString(),
     endIso: new Date(end).toISOString(),
