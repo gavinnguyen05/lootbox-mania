@@ -221,6 +221,24 @@ a.feed-player:hover { color: var(--text); text-decoration: underline; }
 .feed-legendary .feed-drop .candy-icon, .feed-cursed .feed-drop .candy-icon { width: 28px; height: 28px; }
 .feed-row.undone .feed-candy { text-decoration: line-through; opacity: .6; }
 
+/* ---------- Featured quote ---------- */
+.featured-quote {
+  position: relative; margin: 0 0 18px; padding: 14px 16px 12px 46px;
+  background: var(--panel-2); border: 1px solid var(--line); border-left: 3px solid var(--roberts); border-radius: var(--radius);
+}
+.featured-quote::before {
+  content: "\201C"; position: absolute; left: 12px; top: 2px;
+  font-size: 52px; line-height: 1; color: var(--roberts); opacity: .8;
+}
+.featured-quote blockquote { margin: 0; }
+.featured-quote blockquote p { font-size: 18px; line-height: 1.35; overflow-wrap: anywhere; }
+.quote-by { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
+.quote-who { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; min-width: 0; }
+.quote-name { font-weight: 700; font-size: 15px; color: var(--text); text-decoration: none; }
+a.quote-name:hover { text-decoration: underline; }
+.quote-title { font-family: var(--ui); font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--roberts); border: 1px solid #7a3d14; background: #2a1708; border-radius: 999px; padding: 1px 8px; white-space: nowrap; }
+@media (min-width: 900px) { .featured-quote blockquote p { font-size: 21px; } }
+
 /* ---------- Home ---------- */
 .home-hero { display: grid; gap: 12px; margin-bottom: 18px; }
 .home-intro { color: var(--muted); max-width: 90ch; }

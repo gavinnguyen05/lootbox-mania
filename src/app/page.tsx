@@ -5,6 +5,8 @@ import DropList from "@/components/DropList";
 import PlayerCard from "@/components/PlayerCard";
 import { rankPlayers } from "@/lib/ranking";
 import EscapedList from "@/components/EscapedList";
+import FeaturedQuote from "@/components/FeaturedQuote";
+import { FEATURED_QUOTE } from "@/lib/featured";
 import LocalTime from "@/components/LocalTime";
 import LootboxIcon from "@/components/LootboxIcon";
 
@@ -17,9 +19,12 @@ export default async function Home() {
   ]);
   const escaped = players.filter((p) => p.lootbox_status === "escaped").length;
   const ranked = rankPlayers(players, items, escapeTimes);
+  const quote = FEATURED_QUOTE;
+  const quoted = quote ? players.find((p) => p.slug === quote.slug) : undefined;
 
   return (
     <div className="page">
+      {quote && <FeaturedQuote quote={quote} player={quoted} />}
       <div className="home-hero">
         <div>
           <h1 className="page-title">Home</h1>
