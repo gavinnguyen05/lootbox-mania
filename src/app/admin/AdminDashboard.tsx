@@ -349,14 +349,21 @@ function ResultShot({ results, player, items, ref }: {
         )}
       </div>
       <div className="shot-cards">
-        {results.map((r) => <ResultCard key={r.roll_id} r={r} />)}
+        {results.map((r, i) => {
+          // This roll finished a rarity set if it was a new candy, the set is now
+          // full, and no later roll in this batch added to the same set.
+          const tier = pr.byRarity[r.rarity as keyof typeof pr.byRarity];
+          const completedSet = fresh && Boolean(tier) && r.was_new_item && tier.collected === tier.total &&
+            !results.slice(i + 1).some((later) => later.rarity === r.rarity && later.was_new_item);
+          return <ResultCard key={r.roll_id} r={r} completedSet={completedSet} />;
+        })}
       </div>
       {results.some((r) => r.replayed) && <p className="muted small">Already rolled. Showing the saved result.</p>}
     </section>
   );
 }
 
-function ResultCard({ r }: { r: RollResult }) {
+function ResultCard({ r, completedSet }: { r: RollResult; completedSet: boolean }) {
   const meta = RARITY[r.rarity];
   const counted = r.rarity !== "cursed" && r.rarity !== "legendary";
   return (
@@ -365,10 +372,10 @@ function ResultCard({ r }: { r: RollResult }) {
       <span className="result-odds">{Number(r.item_odds)}% drop rate</span>
       <CandyIcon src={r.icon_path} size={170} priority />
       <span className="result-name">{r.item_name}</span>
-      {r.rarity === "cursed" ? <span className="result-tag tag-red">CHECKLIST RESET 💀</span>
-        : r.rarity === "legendary" ? <span className="result-tag tag-gold">ESCAPED! 🎉</span>
+      {r.rarity === "cursed" ? <span className="result-tag tag-red">CHECKLIST RESET&nbsp;💀</span>
+        : r.rarity === "legendary" ? <span className="result-tag tag-gold">ESCAPED!&nbsp;🎉</span>
         : r.was_new_item ? <span className="result-tag tag-green">NEW ITEM!</span>
-        : r.triggered_roberts_rule ? <span className="result-tag tag-red">DUPE, MAXED 😭</span>
+        : r.triggered_roberts_rule ? <span className="result-tag tag-red">DUPE, MAXED&nbsp;😭</span>
         : <span className="result-tag">DUPE</span>}
       {counted && (
         <span className={`dupe-meter${r.times_rolled >= 3 ? " maxed" : ""}`}>
@@ -377,7 +384,10 @@ function ResultCard({ r }: { r: RollResult }) {
         </span>
       )}
       {r.triggered_roberts_rule && <span className="result-note">Removed from loot pool (Robert&apos;s Rule IV)</span>}
-      {r.triggered_completion && r.rarity !== "legendary" && <span className="result-tag tag-gold">CHECKLIST COMPLETE, ESCAPED! 🎉</span>}
+      {completedSet && !r.triggered_completion && (
+        <span className={`result-tag tag-set ${meta.className}`}>{meta.label.toUpperCase()} COMPLETE!&nbsp;🎉</span>
+      )}
+      {r.triggered_completion && r.rarity !== "legendary" && <span className="result-tag tag-green">ESCAPED!&nbsp;🎉</span>}
     </div>
   );
 }

@@ -67,15 +67,17 @@
 
 /* Screenshot panel: everything a Discord post needs, nothing else. */
 .shot { background: #121218; border: 2px solid var(--line-strong); border-radius: 12px; padding: 14px; display: grid; gap: 14px; min-width: 0; }
-.shot-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+/* Header bar: solid, so the name and progress read on any Discord theme. */
+.shot-head { display: flex; align-items: center; gap: 10px 14px; flex-wrap: wrap; background: #16161c; border: 1px solid var(--line-strong); border-radius: 12px; padding: 10px 14px; }
 .shot-who { display: flex; flex-direction: column; flex: 1; min-width: 0; }
-.shot-name { font-size: 20px; font-weight: 700; line-height: 1.15; overflow-wrap: anywhere; }
+.shot-name { font-size: 20px; font-weight: 700; line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .shot-sub { color: var(--muted); font-size: 14px; }
-.shot-progress { display: grid; gap: 4px; justify-items: end; font-weight: 700; font-size: 15px; border: 1px solid var(--line-strong); border-radius: var(--radius); padding: 6px 10px; }
+/* Large because Discord shrinks images on phones. */
+.shot-progress { display: grid; gap: 4px; justify-items: end; font-weight: 700; font-size: 19px; color: var(--text); }
 .shot-total { white-space: nowrap; }
-.shot-tiers { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 2px 10px; font-family: var(--ui); font-size: 13px; font-weight: 400; color: var(--muted); }
+.shot-tiers { display: flex; flex-wrap: nowrap; justify-content: flex-end; gap: 2px 12px; font-family: var(--ui); font-size: 16px; font-weight: 700; color: var(--common); }
 .shot-tier { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
-.shot-tier .dot { width: 9px; height: 9px; }
+.shot-tier .dot { width: 11px; height: 11px; }
 .shot-tier.r-uncommon { color: var(--uncommon); }
 .shot-tier.r-rare { color: var(--rare); }
 .shot-progress.escaped { color: var(--uncommon); border-color: #22612e; }
@@ -104,8 +106,13 @@
 .result-card.r-cursed .result-rarity { color: var(--red); }
 .result-odds { font-family: var(--ui); font-size: 14px; color: var(--muted); margin-top: -4px; }
 .result-name { font-size: 28px; font-weight: 700; line-height: 1.05; text-transform: uppercase; overflow-wrap: anywhere; }
-.result-tag { font-weight: 700; font-size: 17px; border: 2px solid var(--line-strong); border-radius: var(--radius); padding: 3px 12px; }
-.result-note { font-size: 14px; color: var(--muted); font-style: italic; }
+/* One line always: the copied image locks each box's height, so a wrap there spills out. */
+.result-tag { font-weight: 700; font-size: 17px; border: 2px solid var(--line-strong); border-radius: var(--radius); padding: 3px 12px; white-space: nowrap; }
+.tag-set { font-size: 15px; }
+.tag-set.r-common { color: var(--common); border-color: #6d6b7b; }
+.tag-set.r-uncommon { color: var(--uncommon); border-color: #2b7a39; background: #12251a; }
+.tag-set.r-rare { color: var(--rare); border-color: #2c5596; background: #101b30; }
+.result-note { font-size: 14px; color: var(--roberts); font-style: italic; }
 @media (min-width: 600px) {
   .result-card { flex: 1 1 280px; max-width: 420px; padding: 26px 20px 28px; border-radius: 14px; }
   .result-card .candy-icon { width: 170px; height: 170px; }
@@ -180,7 +187,7 @@
 .feed-meta { display: block; color: var(--muted); font-family: var(--ui); font-size: 13px; }
 
 /* Bonus boxes */
-.bonus-note { font-family: var(--ui); font-size: 12px; color: var(--gold); }
+.bonus-note { font-family: var(--ui); font-size: 12px; color: var(--ready); }
 .bonus-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; padding: 8px 12px; border: 1px dashed var(--line-strong); border-radius: var(--radius); font-family: var(--ui); font-size: 14px; }
-.bonus-label strong { color: var(--gold); }
+.bonus-label strong { color: var(--ready); }
 .bonus-buttons { display: flex; gap: 8px; }
