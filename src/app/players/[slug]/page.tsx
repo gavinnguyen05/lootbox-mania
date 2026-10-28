@@ -52,7 +52,7 @@ export default async function PlayerPage({ params }: Params) {
       <PlayerStatusStrip player={player} />
 
       <div className="pd-layout">
-        <Checklist items={items} playerItems={player.player_lootbox_items} />
+        <Checklist items={items} playerItems={player.player_lootbox_items} trapped={player.lootbox_status === "trapped"} />
         <div className="pd-side">
           <aside className="pd-card pd-recent" aria-labelledby="drops-h">
             <h2 id="drops-h">Recent Drops</h2>

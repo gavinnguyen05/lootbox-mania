@@ -43,6 +43,21 @@
 .pd-tier.r-rare h3 { color: var(--rare); }
 .pd-tier-count { font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums; }
 
+/* Rarity complete: border and a tag in that rarity's color. */
+.pd-complete { font-family: var(--ui); font-size: 12px; font-weight: 700; border-radius: 999px; padding: 1px 8px; border: 1px solid; white-space: nowrap; }
+.pd-tier.complete.r-common { border-color: #8d8b9c; }
+.pd-tier.complete.r-common .pd-complete { color: var(--common); border-color: #6d6b7b; background: #24242c; }
+.pd-tier.complete.r-uncommon { border-color: #2b7a39; }
+.pd-tier.complete.r-uncommon .pd-complete { color: var(--uncommon); border-color: #2b7a39; background: #12251a; }
+.pd-tier.complete.r-rare { border-color: #2c5596; }
+.pd-tier.complete.r-rare .pd-complete { color: var(--rare); border-color: #2c5596; background: #101b30; }
+
+/* Almost there: highlight what's still missing. */
+.pd-almost { font-weight: 700; color: var(--text); margin-right: 8px; }
+.pd-row.needed { margin: 1px -6px; padding: 2px 6px; border: 1px dashed #c9c7d6; border-radius: 6px; background: rgba(255, 255, 255, .05); }
+.pd-row.needed .pd-name { color: #fff; font-weight: 700; }
+.pd-need { font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: #fff; border: 1px solid #c9c7d6; border-radius: 999px; padding: 0 7px; }
+
 /* Rows: [check] [icon] name ... Copies. Names wrap; nothing is cut off. */
 .pd-rows { list-style: none; margin: 0; padding: 0; display: grid; }
 .pd-row { display: grid; grid-template-columns: 20px 28px minmax(0, 1fr) auto; column-gap: 8px; align-items: center; min-height: 38px; padding: 2px 0; }
@@ -52,7 +67,7 @@
 .pd-row.missing .pd-name { color: #d6d4e0; }
 .pd-copies { font-family: var(--ui); font-size: 13px; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
 .pd-row.excluded > :not(.pd-note) { opacity: .5; }
-.pd-note { grid-column: 3 / -1; font-family: var(--ui); font-size: 13px; color: var(--muted); margin: -2px 0 4px; }
+.pd-note { grid-column: 3 / -1; font-family: var(--ui); font-size: 13px; color: var(--roberts); margin: -2px 0 4px; }
 /* Very narrow phones: Copies drops under the name instead of squeezing it. */
 @media (max-width: 359px) {
   .pd-row { grid-template-columns: 20px 28px minmax(0, 1fr); }
@@ -68,7 +83,7 @@
 .pd-check.on { background: var(--check-on); border-color: var(--check-on); }
 
 /* Special */
-.pd-special-title { display: flex; align-items: center; gap: 8px; font-size: 18px; font-weight: 700; color: var(--gold); margin-bottom: 4px; }
+.pd-special-title { display: flex; align-items: center; gap: 8px; font-size: 18px; font-weight: 700; color: var(--gold); margin-bottom: 12px; padding-bottom: 6px; border-bottom: 1px solid var(--line-strong); }
 .pd-special-title .dot { width: 14px; height: 14px; }
 .pd-special-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
 .pd-special-item { display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; column-gap: 8px; align-items: center; }
@@ -88,7 +103,8 @@
 /* Robert's Rule IV card */
 .pd-rule-head { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
 .pd-rule-icon { width: 44px; height: auto; flex: none; }
-.pd-rule h2 { font-size: 17px; font-weight: 700; color: var(--gold); line-height: 1.15; }
+.pd-rule { box-shadow: inset 3px 0 0 var(--roberts); }
+.pd-rule h2 { font-size: 17px; font-weight: 700; color: var(--roberts); line-height: 1.15; }
 .pd-rule p { font-family: var(--ui); font-size: 14px; line-height: 1.45; color: var(--muted); }
 
 /* Tablets: bigger header, Special side by side, drops + rule side by side. */

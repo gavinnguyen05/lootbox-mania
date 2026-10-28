@@ -56,7 +56,6 @@ export default async function Home() {
       <div className="home-grid">
         <section aria-labelledby="dir-h">
           <h2 id="dir-h" className="section-title home-section-title">Players</h2>
-          <p className="section-sub">Ranked by how close each player is to escaping. Tap a card to see their checklist.</p>
           <ul className="player-list">
             {ranked.map((row) => (
               <li key={row.player.id}>

@@ -32,7 +32,7 @@
   --uncommon: #5fdc6a;
   --rare: #5b97f8;
   --gold: #f6c945; /* Legendary only */
-  --ready: #3dd6c3; /* boxes: ready, windows, bonus */
+  --ready: #f2f2f7; /* boxes: ready, bonus */
   --roberts: #ff8a3d; /* Robert's Rule IV */
   --red: #f26161;
   --red-bg: #2a1214;
@@ -139,7 +139,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 /* Boxes ready: a real badge. None left: plain muted text, so the two states
    read differently at a glance (and in words, not just color). */
 .boxes-badge { display: inline-flex; align-items: center; gap: 4px; font-family: var(--ui); font-size: 13px; color: var(--muted); white-space: nowrap; }
-.boxes-badge.ready { color: var(--ready); font-weight: 700; border: 1px solid #1f6b62; border-radius: 4px; padding: 2px 8px; background: #0d2522; }
+.boxes-badge.ready { color: var(--ready); font-weight: 700; border: 1px solid #8d8b9c; border-radius: 4px; padding: 2px 8px; background: #2a2a33; }
 
 .lootbox-icon { width: 16px; height: 16px; object-fit: contain; flex: none; }
 .boxes-pill { display: inline-flex; align-items: center; gap: 3px; }
@@ -295,11 +295,11 @@ a.quote-name:hover { text-decoration: underline; }
 .player-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
 .player-card { display: flex; align-items: center; gap: 12px; text-decoration: none; padding: 10px 12px; min-height: 64px; height: 100%; }
 .player-card:hover { border-color: var(--purple); }
-/* Players who can open boxes right now: teal edge and a faint tint. */
+/* Players who can open boxes right now: white edge and a faint tint. */
 .player-card.has-boxes {
-  border-color: #1d5a53;
+  border-color: #5a5866;
   box-shadow: inset 3px 0 0 var(--ready);
-  background: linear-gradient(90deg, rgba(61, 214, 195, .09), rgba(61, 214, 195, 0) 55%), var(--panel-2);
+  background: linear-gradient(90deg, rgba(255, 255, 255, .06), rgba(255, 255, 255, 0) 55%), var(--panel-2);
 }
 .player-card.has-boxes:hover { border-color: var(--ready); }
 .player-card-text { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; min-width: 0; }
