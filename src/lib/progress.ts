@@ -38,3 +38,12 @@ export function progress(items: Item[], playerItems: PlayerItem[]) {
     total: required.length,
   };
 }
+
+/** Once a trapped player has this many required candies, show what's left
+ *  (checklist highlight, result image, Discord message). */
+export const ALMOST_THERE = 8;
+
+/** Names of required candies still missing, in checklist order. */
+export function missingNames(items: Item[], playerItems: PlayerItem[]): string[] {
+  return buildRows(items, playerItems).filter((r) => r.item.required && !r.state.collected).map((r) => r.item.name);
+}

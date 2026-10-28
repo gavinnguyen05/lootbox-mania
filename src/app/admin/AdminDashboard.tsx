@@ -377,8 +377,7 @@ function ResultCard({ r, completedSet }: { r: RollResult; completedSet: boolean 
   const counted = r.rarity !== "cursed" && r.rarity !== "legendary";
   return (
     <div className={`result-card ${meta.className}`}>
-      <span className="result-rarity">{meta.emoji} {meta.label.toUpperCase()}</span>
-      <span className="result-odds">{Number(r.item_odds)}% drop rate</span>
+      <span className="result-rarity">{meta.emoji} {meta.label.toUpperCase()}, {Number(r.item_odds)}%</span>
       <CandyIcon src={r.icon_path} size={170} priority />
       <span className="result-name">{r.item_name}</span>
       {r.rarity === "cursed" ? <span className="result-tag tag-red">CHECKLIST RESET&nbsp;💀</span>

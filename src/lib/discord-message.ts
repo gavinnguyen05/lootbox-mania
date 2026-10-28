@@ -18,7 +18,7 @@ export interface ChecklistSummary {
  * ✅ **Rare set complete!**
  * <:exclamation:…> **Only 2 left:** Dots, 100 Grand
  *
- * [See full checklist here](<https://site/players/slug>) 📋
+ * [Tap here to view your candy checklist!](<https://site/players/slug>) 📋
  */
 export function discordMessage(results: RollResult[], siteUrl: string, summary?: ChecklistSummary): string {
   const first = results[0];
@@ -42,5 +42,5 @@ export function discordMessage(results: RollResult[], siteUrl: string, summary?:
   if (needed.length) extras.push(`${EXCLAMATION_EMOJI} **Only ${needed.length} left:** ${needed.join(", ")}`);
 
   // The <> around the URL stops Discord from adding a preview card.
-  return [head, ...lines, ...extras, "", `[See full checklist here](<${siteUrl}/players/${first.player_slug}>) 📋`].join("\n");
+  return [head, ...lines, ...extras, "", `[Tap here to view your candy checklist!](<${siteUrl}/players/${first.player_slug}>) 📋`].join("\n");
 }
