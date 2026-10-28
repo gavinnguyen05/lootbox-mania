@@ -5,10 +5,11 @@
 // router.refresh() re-renders the page with fresh server data.
 
 import { useMemo, useRef, useState, useTransition } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import type { AdminAction, AdminPlayer, Item, Roll, RollResult } from "@/lib/types";
 import { RARITY, CHECKLIST_RARITIES } from "@/lib/rarity";
-import { buildRows, progress } from "@/lib/progress";
+import { ALMOST_THERE, buildRows, missingNames, progress } from "@/lib/progress";
 import { displayName } from "@/lib/names";
 import type { WindowInfo } from "@/lib/time";
 import Avatar from "@/components/Avatar";
@@ -322,6 +323,7 @@ function ResultShot({ results, player, items, ref }: {
   // Player data reloads just after a roll. Show the per-rarity breakdown only
   // once it agrees with the roll's own total, so an image is never half-stale.
   const fresh = pr.collected === last.checklist_collected;
+  const needed = fresh && last.status === "trapped" && pr.collected >= ALMOST_THERE ? missingNames(items, player.player_lootbox_items) : [];
   return (
     <section className="shot" aria-label="Roll results" ref={ref}>
       <div className="shot-head">
@@ -348,6 +350,13 @@ function ResultShot({ results, player, items, ref }: {
           </div>
         )}
       </div>
+      {needed.length > 0 && (
+        <p className="shot-almost">
+          <Image src="/assets/exclamation.png" alt="" width={26} height={26} className="shot-almost-mark" />
+          <span className="shot-almost-label">Nearing Completion</span>
+          <span className="shot-almost-list">Needs {needed.join(", ")}</span>
+        </p>
+      )}
       <div className="shot-cards">
         {results.map((r, i) => {
           // This roll finished a rarity set if it was a new candy, the set is now

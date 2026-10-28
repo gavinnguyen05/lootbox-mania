@@ -191,3 +191,10 @@
 .bonus-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; padding: 8px 12px; border: 1px dashed var(--line-strong); border-radius: var(--radius); font-family: var(--ui); font-size: 14px; }
 .bonus-label strong { color: var(--ready); }
 .bonus-buttons { display: flex; gap: 8px; }
+
+/* Nearing Completion strip on the result image. Solid so it reads on any background;
+   one line (the copied image locks heights, so wrapping would spill). */
+.shot-almost { display: flex; align-items: center; gap: 10px; margin: 0; padding: 8px 14px; background: #16161c; border: 1px dashed #c9c7d6; border-radius: 12px; white-space: nowrap; overflow: hidden; }
+.shot-almost-mark { flex: none; width: 26px; height: 26px; object-fit: contain; }
+.shot-almost-label { font-weight: 700; font-size: 17px; letter-spacing: .06em; text-transform: uppercase; color: #fff; }
+.shot-almost-list { font-family: var(--ui); font-size: 16px; font-weight: 700; color: var(--common); overflow: hidden; text-overflow: ellipsis; }
