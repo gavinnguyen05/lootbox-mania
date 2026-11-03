@@ -7,7 +7,7 @@
 import { useMemo, useRef, useState, useTransition } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import type { AdminAction, AdminPlayer, Item, Roll, RollResult } from "@/lib/types";
+import type { AdminAction, AdminPlayer, Item, Neighbor, Roll, RollResult, TreatRow } from "@/lib/types";
 import { RARITY, CHECKLIST_RARITIES } from "@/lib/rarity";
 import { ALMOST_THERE, buildRows, missingNames, progress } from "@/lib/progress";
 import { displayName } from "@/lib/names";
@@ -25,11 +25,14 @@ import {
   type ActionResult, type OpenResult,
 } from "./actions";
 import { signOut } from "../login/actions";
+import PlayerPicker from "./PlayerPicker";
+import TreatTab from "./TreatTab";
 import "./admin.css";
 
-type Tab = "open" | "players" | "activity";
+type Tab = "open" | "treat" | "players" | "activity";
 const TABS: { id: Tab; label: string }[] = [
   { id: "open", label: "Open Lootbox" },
+  { id: "treat", label: "Trick-or-Treat" },
   { id: "players", label: "Players" },
   { id: "activity", label: "Activity" },
 ];
@@ -42,6 +45,9 @@ interface Props {
   rolls: Roll[];
   actions: AdminAction[];
   used: Record<string, number>;
+  neighbors: Neighbor[];
+  treats: TreatRow[];
+  treatsUsed: Record<string, number>;
 }
 
 type Shared = {
@@ -92,68 +98,13 @@ export default function AdminDashboard(props: Props) {
           <OpenTab {...shared} players={props.players.filter((p) => p.active)} used={props.used}
             selected={selected?.active ? selected : null} onSelect={setSelectedId} />
         )}
+        {tab === "treat" && (
+          <TreatTab players={props.players} items={props.items} neighbors={props.neighbors}
+            treats={props.treats} treatsUsed={props.treatsUsed} setFlash={setFlash} />
+        )}
         {tab === "players" && <PlayersTab {...shared} players={props.players} selected={selected} onSelect={setSelectedId} />}
         {tab === "activity" && <ActivityTab {...shared} players={props.players} actions={props.actions} />}
       </div>
-    </div>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/* Player picker                                                       */
-/* ------------------------------------------------------------------ */
-function PlayerPicker({ players, items, selectedId, onSelect, used }: {
-  players: AdminPlayer[]; items: Item[]; selectedId: string | null; onSelect: (id: string) => void; used?: Record<string, number>;
-}) {
-  const [query, setQuery] = useState("");
-  const [browsing, setBrowsing] = useState(false);
-  const selected = players.find((p) => p.id === selectedId);
-  // Phones: hide the list once someone is picked (CSS only applies this under 900px).
-  const collapsed = Boolean(selected) && !query && !browsing;
-  function choose(id: string) {
-    onSelect(id);
-    setQuery("");
-    setBrowsing(false);
-  }
-  const list = useMemo(() => {
-    const needle = query.trim().toLowerCase();
-    return players
-      .filter((p) => !needle || [p.discord_display_name, p.discord_username, p.discord_user_id].some((s) => s?.toLowerCase().includes(needle)))
-      .sort((a, b) => displayName(a).localeCompare(displayName(b)));
-  }, [players, query]);
-
-  return (
-    <div className={`picker panel${collapsed ? " collapsed" : ""}`}>
-      <input className="input" type="search" placeholder="Find player" aria-label="Find player" value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        onKeyDown={(e) => { if (e.key === "Enter" && list[0]) choose(list[0].id); }} />
-      {collapsed && selected && (
-        <div className="picker-selected">
-          <span>Selected: <strong>{displayName(selected)}</strong></span>
-          <button className="btn btn-sm" onClick={() => setBrowsing(true)}>Change</button>
-        </div>
-      )}
-      <ul className="picker-list">
-        {list.map((p) => {
-          const left = used ? boxesLeft(p, used[p.id] ?? 0) : null;
-          return (
-            <li key={p.id}>
-              <button className={`picker-row${p.id === selectedId ? " active" : ""}`} aria-pressed={p.id === selectedId} onClick={() => choose(p.id)}>
-                <Avatar src={p.discord_avatar_url} name={displayName(p)} size={30} />
-                <span className="picker-name">
-                  {displayName(p)}
-                  {!p.active && <> <span className="flag">inactive</span></>}
-                </span>
-                <span className="picker-meta">
-                  {p.lootbox_status === "escaped" ? "✅" : `${progress(items, p.player_lootbox_items).collected}/10`}
-                  {left !== null && p.lootbox_status === "trapped" && <span className="boxes-pill" aria-label={`${left} boxes left`}>{left}<LootboxIcon size={14} /></span>}
-                </span>
-              </button>
-            </li>
-          );
-        })}
-        {list.length === 0 && <li className="muted small picker-empty">No players found.</li>}
-      </ul>
     </div>
   );
 }
@@ -626,6 +577,9 @@ function summarize(a: AdminAction): string {
     return `${m.item_id}: ×${o.times_rolled}→×${n.times_rolled}, collected ${o.collected}→${n.collected}, excluded ${o.excluded}→${n.excluded}`;
   }
   if (a.action_type === "set_status") return `${m.old} → ${m.new}`;
+  if (a.action_type === "set_candy") return `candy ${m.old} → ${m.new}`;
+  if (a.action_type === "undo_treat") return `treat #${m.treat_id} (${m.candy} candy)`;
+  if (a.action_type === "reroll_treat") return `replaced treat #${m.replaced_treat_id}`;
   if (a.action_type === "grant_box" || a.action_type === "remove_box") return `bonus ${m.old} → ${m.new}`;
   if (a.action_type === "undo_roll") return `roll #${m.roll_id} (${m.item_id})`;
   if (a.action_type === "sync_profiles") return `updated ${m.updated}`;

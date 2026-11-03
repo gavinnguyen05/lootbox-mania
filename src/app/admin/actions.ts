@@ -13,10 +13,13 @@ import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth";
 import { serviceClient } from "@/lib/supabase/service";
 import { fetchDiscordProfile } from "@/lib/discord";
-import { discordMessage } from "@/lib/discord-message";
+import { discordMessage, type ChecklistSummary } from "@/lib/discord-message";
+import { ALMOST_THERE, missingNames, progress } from "@/lib/progress";
+import { CHECKLIST_RARITIES } from "@/lib/rarity";
 import { rateLimited } from "@/lib/rate-limit";
 import * as v from "@/lib/validate";
-import type { RollResult } from "@/lib/types";
+import type { Item, PlayerItem, RollResult, TreatResult } from "@/lib/types";
+import { leaderboardText, treatMessage, type CandyPlayer } from "@/lib/candy";
 
 export interface ActionResult {
   ok: boolean;
@@ -39,6 +42,10 @@ const GAME_ERRORS: Record<string, string> = {
   NOTHING_TO_UNDO: "No roll to undo.",
   MANUAL_EDIT_AFTER_ROLL: "This player was edited by hand after their last roll. Undo would erase that edit, so fix it manually instead.",
   ITEM_NOT_FOUND: "Item not found.",
+  PLAYER_NOT_ESCAPED: "Only escaped players can trick-or-treat.",
+  NO_TREATS_LEFT: "No treats left in this window.",
+  NEIGHBOR_NOT_FOUND: "That neighbor isn't set up.",
+  MANUAL_EDIT_AFTER_TREAT: "Their candy was changed by hand after that treat, so it can't be undone. Fix the total instead.",
   NO_BONUS_TO_REMOVE: "This player has no bonus boxes to remove.",
   TOO_MANY_BONUS: "That's the most bonus boxes a player can hold (99).",
   INVALID_COUNT: "Invalid number.",
@@ -82,6 +89,34 @@ async function siteUrl() {
 }
 
 /**
+ * After a roll: which rarities this batch finished, and (when the player is
+ * close) which candies they still need. Read from the database, not the browser.
+ */
+async function checklistSummary(playerId: string, results: RollResult[]): Promise<ChecklistSummary | undefined> {
+  try {
+    const db = serviceClient();
+    const [itemsRes, stateRes] = await Promise.all([
+      db.from("lootbox_items").select("id, name, rarity, base_probability, required, sort_order, icon_path, active"),
+      db.from("player_lootbox_items").select("item_id, times_rolled, collected, excluded_by_roberts_rule, first_rolled_at").eq("player_id", playerId),
+    ]);
+    if (itemsRes.error || stateRes.error) throw new Error((itemsRes.error ?? stateRes.error)!.message);
+    const items = itemsRes.data as Item[];
+    const state = stateRes.data as PlayerItem[];
+    const pr = progress(items, state);
+    // A set was finished by this batch if it's full now and one of these rolls was a new candy in it.
+    const completedSets = CHECKLIST_RARITIES.filter((r) =>
+      pr.byRarity[r].total > 0 && pr.byRarity[r].collected === pr.byRarity[r].total &&
+      results.some((x) => x.rarity === r && x.was_new_item));
+    const trapped = results[results.length - 1].status === "trapped";
+    const stillNeeded = trapped && pr.collected >= ALMOST_THERE ? missingNames(items, state) : [];
+    return { completedSets, stillNeeded };
+  } catch (e) {
+    console.error("[checklistSummary]", e instanceof Error ? e.message : e);
+    return undefined; // the message still works, just without the extra lines
+  }
+}
+
+/**
  * Opens one or two boxes. The browser only says which player; the database
  * picks the candy (crypto-strength RNG), applies every rule, and records the
  * roll in one transaction per box. Each requestId is an idempotency key:
@@ -101,12 +136,13 @@ export async function openBoxes(playerId: unknown, requestIds: unknown): Promise
       if (r.status === "escaped") break; // nothing left to roll for
     }
     refreshPages();
-    return { ok: true, results, discordText: discordMessage(results, await siteUrl()) };
+    return { ok: true, results, discordText: discordMessage(results, await siteUrl(), await checklistSummary(player, results)) };
   } catch (e) {
     const err = fail(e, "Couldn't open the lootbox. Try again.");
     if (results.length) {
       refreshPages();
-      return { ...err, ok: true, error: `Opened ${results.length}. ${err.error}`, results, discordText: discordMessage(results, await siteUrl()) };
+      const summary = await checklistSummary(results[0].player_id, results);
+      return { ...err, ok: true, error: `Opened ${results.length}. ${err.error}`, results, discordText: discordMessage(results, await siteUrl(), summary) };
     }
     return { ...err, results, discordText: "" };
   }
@@ -118,6 +154,79 @@ export async function undoLastRoll(playerId: unknown): Promise<ActionResult> {
     const data = await rpc<{ roll_id: number }>("undo_last_roll", { p_player_id: v.uuid(playerId, "player") });
     refreshPages();
     return { ok: true, notice: `Undid roll #${data.roll_id}.` };
+  } catch (e) {
+    return fail(e);
+  }
+}
+
+export interface TreatActionResult extends ActionResult {
+  result?: TreatResult;
+  discordText?: string;
+  leaderboard?: string;
+}
+
+/** Leaderboard text read straight from the database, so it's never stale. */
+async function freshLeaderboard(): Promise<string | undefined> {
+  const { data, error } = await serviceClient().from("players").select("id, discord_user_id, candy, candy_reached_at, active");
+  if (error) {
+    console.error("[leaderboard]", error.message);
+    return undefined;
+  }
+  return leaderboardText(data as CandyPlayer[]);
+}
+
+async function treatResponse(result: TreatResult, notice?: string): Promise<TreatActionResult> {
+  refreshPages();
+  return {
+    ok: true,
+    notice,
+    result,
+    discordText: treatMessage(result.message, result.emoji_code, result.candy),
+    leaderboard: await freshLeaderboard(),
+  };
+}
+
+/** Trick-or-treat at a neighbor's house. The database picks the outcome. */
+export async function trickOrTreat(playerId: unknown, neighborId: unknown, requestId: unknown): Promise<TreatActionResult> {
+  try {
+    await requireAdmin();
+    const result = await rpc<TreatResult>("trick_or_treat", {
+      p_player_id: v.uuid(playerId, "player"), p_neighbor_id: v.neighborId(neighborId), p_request_id: v.uuid(requestId, "request"),
+    });
+    return treatResponse(result);
+  } catch (e) {
+    return fail(e, "Couldn't trick-or-treat. Try again.");
+  }
+}
+
+/** Cancel the player's latest treat and roll again in the same slot. */
+export async function rerollTreat(playerId: unknown, requestId: unknown): Promise<TreatActionResult> {
+  try {
+    await requireAdmin();
+    const result = await rpc<TreatResult>("reroll_treat", { p_player_id: v.uuid(playerId, "player"), p_request_id: v.uuid(requestId, "request") });
+    return treatResponse(result, "Rerolled.");
+  } catch (e) {
+    return fail(e, "Couldn't reroll. Try again.");
+  }
+}
+
+export async function undoTreat(playerId: unknown): Promise<TreatActionResult> {
+  try {
+    await requireAdmin();
+    await rpc("undo_last_treat", { p_player_id: v.uuid(playerId, "player") });
+    refreshPages();
+    return { ok: true, notice: "Undid the last treat.", leaderboard: await freshLeaderboard() };
+  } catch (e) {
+    return fail(e);
+  }
+}
+
+export async function setCandy(playerId: unknown, amount: unknown): Promise<TreatActionResult> {
+  try {
+    await requireAdmin();
+    await rpc("admin_set_candy", { p_player_id: v.uuid(playerId, "player"), p_amount: v.int(amount, 0, 100000, "candy amount") });
+    refreshPages();
+    return { ok: true, notice: "Candy updated.", leaderboard: await freshLeaderboard() };
   } catch (e) {
     return fail(e);
   }

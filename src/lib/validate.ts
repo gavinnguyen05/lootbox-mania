@@ -22,6 +22,11 @@ export function itemId(v: unknown): string {
   return v as string;
 }
 
+export function neighborId(v: unknown): string {
+  check(typeof v === "string" && ITEM_ID.test(v), "neighbor");
+  return v as string;
+}
+
 export function discordId(v: unknown): string {
   const s = typeof v === "string" ? v.trim() : "";
   check(DISCORD_ID.test(s), "Discord user ID");

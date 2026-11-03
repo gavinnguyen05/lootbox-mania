@@ -4,7 +4,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { publicClient } from "./supabase/public";
 import { serviceClient } from "./supabase/service";
 import { SLUG } from "./validate";
-import type { AdminAction, AdminPlayer, Item, PlayerWithItems, Roll } from "./types";
+import type { AdminAction, AdminPlayer, Item, Neighbor, PlayerWithItems, Roll, TreatRow } from "./types";
 
 // Explicit columns only. Public queries can't use * anyway: the anon key is
 // only granted these columns.
@@ -82,16 +82,22 @@ export async function getEscapeTimes(): Promise<Record<string, string>> {
 /** Everything the admin dashboard needs, in parallel. Service role, admin only. */
 export async function getAdminData(windowKey: string) {
   const db = serviceClient();
-  const [items, players, rolls, actions, used] = await Promise.all([
+  const [items, players, rolls, actions, used, neighbors, treats, treatsUsedRows] = await Promise.all([
     db.from("lootbox_items").select(ITEM_COLS).order("sort_order").then(must<Item[]>),
-    db.from("players").select(`${PLAYER_COLS}, discord_user_id, active, player_lootbox_items(${PLAYER_ITEM_COLS})`)
+    db.from("players").select(`${PLAYER_COLS}, discord_user_id, active, candy, candy_reached_at, player_lootbox_items(${PLAYER_ITEM_COLS})`)
       .order("discord_display_name").then(must<AdminPlayer[]>),
     db.from("lootbox_rolls").select(`${ROLL_COLS}, undone`).order("id", { ascending: false }).limit(200).then(must<Roll[]>),
     db.from("admin_actions").select("id, action_type, player_id, metadata, created_at")
       .order("id", { ascending: false }).limit(100).then(must<AdminAction[]>),
     getWindowUsage(windowKey, db),
+    db.from("neighbors").select("id, name, flag, emoji_code, sort_order, neighbor_outcomes(weight, candy, message, sort_order)")
+      .eq("active", true).order("sort_order").then(must<Neighbor[]>),
+    db.from("treats").select("id, player_id, neighbor_id, candy, created_at, undone").order("id", { ascending: false }).limit(50).then(must<TreatRow[]>),
+    db.from("treats").select("player_id").eq("claim_window", windowKey).eq("undone", false).then(must<{ player_id: string }[]>),
   ]);
-  return { items, players, rolls, actions, used };
+  const treatsUsed: Record<string, number> = {};
+  for (const t of treatsUsedRows) treatsUsed[t.player_id] = (treatsUsed[t.player_id] ?? 0) + 1;
+  return { items, players, rolls, actions, used, neighbors, treats, treatsUsed };
 }
 
 export function byId<T extends { id: string }>(rows: T[]): Record<string, T> {

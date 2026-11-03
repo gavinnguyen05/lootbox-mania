@@ -40,6 +40,48 @@ export interface PlayerWithItems extends Player {
 export interface AdminPlayer extends PlayerWithItems {
   discord_user_id: string;
   active: boolean;
+  candy: number;
+  candy_reached_at: string;
+}
+
+export interface NeighborOutcome {
+  weight: number;
+  candy: number;
+  message: string;
+  sort_order: number;
+}
+
+export interface Neighbor {
+  id: string;
+  name: string;
+  flag: string;
+  emoji_code: string;
+  sort_order: number;
+  neighbor_outcomes: NeighborOutcome[];
+}
+
+/** What the database returns after a treat (see treat_result in SQL). */
+export interface TreatResult {
+  treat_id: number;
+  player_id: string;
+  neighbor_id: string;
+  neighbor: string;
+  flag: string;
+  emoji_code: string;
+  candy: number;
+  message: string;
+  total: number;
+  treats_left: number;
+  replayed: boolean;
+}
+
+export interface TreatRow {
+  id: number;
+  player_id: string;
+  neighbor_id: string;
+  candy: number;
+  created_at: string;
+  undone: boolean;
 }
 
 export interface Roll {
