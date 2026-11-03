@@ -84,7 +84,7 @@ export async function getAdminData(windowKey: string) {
   const db = serviceClient();
   const [items, players, rolls, actions, used, neighbors, treats, treatsUsedRows] = await Promise.all([
     db.from("lootbox_items").select(ITEM_COLS).order("sort_order").then(must<Item[]>),
-    db.from("players").select(`${PLAYER_COLS}, discord_user_id, active, candy, candy_reached_at, player_lootbox_items(${PLAYER_ITEM_COLS})`)
+    db.from("players").select(`${PLAYER_COLS}, discord_user_id, active, candy, candy_reached_at, bonus_treats, player_lootbox_items(${PLAYER_ITEM_COLS})`)
       .order("discord_display_name").then(must<AdminPlayer[]>),
     db.from("lootbox_rolls").select(`${ROLL_COLS}, undone`).order("id", { ascending: false }).limit(200).then(must<Roll[]>),
     db.from("admin_actions").select("id, action_type, player_id, metadata, created_at")
@@ -93,7 +93,8 @@ export async function getAdminData(windowKey: string) {
     db.from("neighbors").select("id, name, flag, emoji_code, sort_order, neighbor_outcomes(weight, candy, message, sort_order)")
       .eq("active", true).order("sort_order").then(must<Neighbor[]>),
     db.from("treats").select("id, player_id, neighbor_id, candy, created_at, undone").order("id", { ascending: false }).limit(50).then(must<TreatRow[]>),
-    db.from("treats").select("player_id").eq("claim_window", windowKey).eq("undone", false).then(must<{ player_id: string }[]>),
+    // Regular treats used this window (bonus treats don't count against the 1).
+    db.from("treats").select("player_id").eq("claim_window", windowKey).eq("undone", false).eq("used_bonus", false).then(must<{ player_id: string }[]>),
   ]);
   const treatsUsed: Record<string, number> = {};
   for (const t of treatsUsedRows) treatsUsed[t.player_id] = (treatsUsed[t.player_id] ?? 0) + 1;

@@ -42,6 +42,7 @@ export interface AdminPlayer extends PlayerWithItems {
   active: boolean;
   candy: number;
   candy_reached_at: string;
+  bonus_treats: number;
 }
 
 export interface NeighborOutcome {
@@ -72,6 +73,7 @@ export interface TreatResult {
   message: string;
   total: number;
   treats_left: number;
+  used_bonus: boolean;
   replayed: boolean;
 }
 

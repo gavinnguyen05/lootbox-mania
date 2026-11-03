@@ -221,6 +221,20 @@ export async function undoTreat(playerId: unknown): Promise<TreatActionResult> {
   }
 }
 
+/** +1 or -1 bonus trick-or-treat. Bonus treats never expire and are used after the window's 1. */
+export async function grantTreat(playerId: unknown, delta: unknown): Promise<TreatActionResult> {
+  try {
+    await requireAdmin();
+    const d = v.int(delta, -1, 1, "change");
+    if (d === 0) throw new v.InvalidInput("Invalid change.");
+    const now = await rpc<number>("admin_grant_treat", { p_player_id: v.uuid(playerId, "player"), p_delta: d });
+    refreshPages();
+    return { ok: true, notice: d > 0 ? `Added a bonus treat (${now} bonus).` : `Removed a bonus treat (${now} bonus).` };
+  } catch (e) {
+    return fail(e);
+  }
+}
+
 export async function setCandy(playerId: unknown, amount: unknown): Promise<TreatActionResult> {
   try {
     await requireAdmin();

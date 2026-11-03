@@ -578,6 +578,7 @@ function summarize(a: AdminAction): string {
   }
   if (a.action_type === "set_status") return `${m.old} → ${m.new}`;
   if (a.action_type === "set_candy") return `candy ${m.old} → ${m.new}`;
+  if (a.action_type === "grant_treat" || a.action_type === "remove_treat") return `bonus treats ${m.old} → ${m.new}`;
   if (a.action_type === "undo_treat") return `treat #${m.treat_id} (${m.candy} candy)`;
   if (a.action_type === "reroll_treat") return `replaced treat #${m.replaced_treat_id}`;
   if (a.action_type === "grant_box" || a.action_type === "remove_box") return `bonus ${m.old} → ${m.new}`;

@@ -231,6 +231,11 @@
 .tt-door-who h2 { font-size: 22px; line-height: 1.1; overflow-wrap: anywhere; }
 .tt-door-who p { font-family: var(--ui); font-size: 14px; color: var(--muted); }
 .tt-actions { display: grid; gap: 8px; }
+.tt-bonus { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; padding: 8px 10px; border: 1px dashed var(--line-strong); border-radius: 10px; font-family: var(--ui); font-size: 14px; }
+.tt-bonus strong { color: var(--pumpkin); }
+.tt-bonus-buttons { display: flex; gap: 6px; }
+.tt-bonus-add { color: var(--pumpkin); border-color: var(--pumpkin-line); }
+.tt-bonus-note { color: var(--pumpkin); }
 .tt-knock { background: linear-gradient(#ff9d54, #f07a1e); border-color: #b8560e; color: #241200; width: 100%; }
 .tt-knock:hover:not(:disabled) { background: linear-gradient(#ffad6e, #f5862e); }
 .tt-secondary { display: flex; gap: 8px; }

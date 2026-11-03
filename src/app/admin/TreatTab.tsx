@@ -12,7 +12,7 @@ import type { AdminPlayer, Neighbor, TreatRow } from "@/lib/types";
 import { displayName } from "@/lib/names";
 import { LEADERBOARD_MESSAGE_URL, LEADERBOARD_TITLE, leaderboardText, rankCandy, treatMessagePlain } from "@/lib/candy";
 import Avatar from "@/components/Avatar";
-import { rerollTreat, setCandy, trickOrTreat, undoTreat, type ActionResult, type TreatActionResult } from "./actions";
+import { grantTreat, rerollTreat, setCandy, trickOrTreat, undoTreat, type ActionResult, type TreatActionResult } from "./actions";
 
 const TREATS_PER_WINDOW = 1;
 
@@ -50,7 +50,11 @@ export default function TreatTab({ players, neighbors, treats, treatsUsed, setFl
   }, [active, query]);
   const selected = active.find((p) => p.id === selectedId && p.lootbox_status === "escaped") ?? null;
   const neighbor = neighbors.find((n) => n.id === neighborId) ?? neighbors[0];
-  const leftFor = (id: string) => Math.max(0, TREATS_PER_WINDOW - (treatsUsed[id] ?? 0));
+  // Regular treat (if unused this window) + bonus treats.
+  const leftFor = (id: string) => {
+    const p = active.find((x) => x.id === id);
+    return Math.max(0, TREATS_PER_WINDOW - (treatsUsed[id] ?? 0)) + (p?.bonus_treats ?? 0);
+  };
   const hasTreat = selected ? treats.some((t) => t.player_id === selected.id && !t.undone) : false;
   const shown = result?.result && selected && result.result.player_id === selected.id ? result : null;
   const board = freshBoard ?? leaderboardText(players);
@@ -87,6 +91,7 @@ export default function TreatTab({ players, neighbors, treats, treatsUsed, setFl
 
   const treat = () => selected && neighbor && run(() => trickOrTreat(selected.id, neighbor.id, crypto.randomUUID()), showTreat);
   const reroll = () => selected && run(() => rerollTreat(selected.id, crypto.randomUUID()), showTreat);
+  const changeBonus = (delta: 1 | -1) => selected && run(() => grantTreat(selected.id, delta));
   const undo = () => selected && confirm(`Undo ${displayName(selected)}'s last treat?`) &&
     run(() => undoTreat(selected.id), () => { setResult(null); setChange(null); });
 
@@ -149,7 +154,7 @@ export default function TreatTab({ players, neighbors, treats, treatsUsed, setFl
                         <span className="tt-tile-name" title={displayName(p)}>{displayName(p)}</span>
                         <span className="tt-tile-meta">
                           <span className="tt-tile-candy">{p.candy}</span>
-                          <span className={`tt-dot${ready ? " ready" : ""}`}>{ready ? "Ready" : "Done"}</span>
+                          <span className={`tt-dot${ready ? " ready" : ""}`}>{ready ? (p.bonus_treats > 0 ? `Ready +${p.bonus_treats}` : "Ready") : "Done"}</span>
                         </span>
                       </button>
                     </li>
@@ -166,9 +171,21 @@ export default function TreatTab({ players, neighbors, treats, treatsUsed, setFl
                 <div className="tt-door-who">
                   <h2>{displayName(selected)}</h2>
                   <p>
-                    {leftFor(selected.id) > 0 ? "Treat ready this window" : "Already trick-or-treated this window"}
+                    {leftFor(selected.id) === 0 ? "Already trick-or-treated this window"
+                      : leftFor(selected.id) === 1 ? "1 treat ready" : `${leftFor(selected.id)} treats ready`}
+                    {selected.bonus_treats > 0 && <span className="tt-bonus-note"> (incl. {selected.bonus_treats} bonus)</span>}
                   </p>
                 </div>
+              </div>
+              <div className="tt-bonus">
+                <span>
+                  Bonus treats: <strong>{selected.bonus_treats}</strong>
+                  <span className="muted"> for requests made before a reset. Never expire.</span>
+                </span>
+                <span className="tt-bonus-buttons">
+                  <button className="btn btn-sm" disabled={busy || selected.bonus_treats < 1} onClick={() => changeBonus(-1)} aria-label="Remove one bonus treat">−1</button>
+                  <button className="btn btn-sm tt-bonus-add" disabled={busy} onClick={() => changeBonus(1)}>+1 treat</button>
+                </span>
               </div>
               <div className="tt-actions">
                 <button className="btn btn-big tt-knock" disabled={busy || leftFor(selected.id) < 1} onClick={treat}>
