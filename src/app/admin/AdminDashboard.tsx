@@ -99,7 +99,7 @@ export default function AdminDashboard(props: Props) {
             selected={selected?.active ? selected : null} onSelect={setSelectedId} />
         )}
         {tab === "treat" && (
-          <TreatTab players={props.players} items={props.items} neighbors={props.neighbors}
+          <TreatTab players={props.players} neighbors={props.neighbors}
             treats={props.treats} treatsUsed={props.treatsUsed} setFlash={setFlash} />
         )}
         {tab === "players" && <PlayersTab {...shared} players={props.players} selected={selected} onSelect={setSelectedId} />}

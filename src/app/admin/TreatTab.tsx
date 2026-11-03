@@ -1,24 +1,26 @@
 "use client";
 // Trick-or-treating: pick a neighbor and an escaped player, roll, copy the
-// neighbor's line for Discord, then copy the updated candy leaderboard and
-// paste it over the leaderboard message. Every change goes through a server
-// action; the database picks outcomes and enforces the 2-per-window limit.
+// neighbor's line for Discord, then copy the candy leaderboard and paste it
+// over the leaderboard message. The database picks outcomes and enforces
+// 1 treat per claim window. Styled differently from Open Lootbox on purpose:
+// player tiles + a doorstep panel, and a Discord-look leaderboard.
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import type { AdminPlayer, Item, Neighbor, TreatRow } from "@/lib/types";
+import type { AdminPlayer, Neighbor, TreatRow } from "@/lib/types";
 import { displayName } from "@/lib/names";
-import { LEADERBOARD_MESSAGE_URL, leaderboardText, rankCandy, treatMessagePlain } from "@/lib/candy";
+import { LEADERBOARD_MESSAGE_URL, LEADERBOARD_TITLE, leaderboardText, rankCandy, treatMessagePlain } from "@/lib/candy";
 import Avatar from "@/components/Avatar";
-import PlayerPicker from "./PlayerPicker";
 import { rerollTreat, setCandy, trickOrTreat, undoTreat, type ActionResult, type TreatActionResult } from "./actions";
 
-const TREATS_PER_WINDOW = 2;
+const TREATS_PER_WINDOW = 1;
 
-export default function TreatTab({ players, items, neighbors, treats, treatsUsed, setFlash }: {
+/** Last candy change you made, shown on the leaderboard as "152 → 156". */
+type Change = { playerId: string; from: number; to: number };
+
+export default function TreatTab({ players, neighbors, treats, treatsUsed, setFlash }: {
   players: AdminPlayer[];
-  items: Item[];
   neighbors: Neighbor[];
   treats: TreatRow[];
   treatsUsed: Record<string, number>;
@@ -27,7 +29,9 @@ export default function TreatTab({ players, items, neighbors, treats, treatsUsed
   const router = useRouter();
   const [neighborId, setNeighborId] = useState(neighbors[0]?.id ?? "");
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [query, setQuery] = useState("");
   const [result, setResult] = useState<TreatActionResult | null>(null);
+  const [change, setChange] = useState<Change | null>(null);
   const [busy, setBusy] = useState(false);
   const busyRef = useRef(false); // blocks a second click before React re-renders
   const [copied, setCopied] = useState<"message" | "leaderboard" | null>(null);
@@ -35,18 +39,23 @@ export default function TreatTab({ players, items, neighbors, treats, treatsUsed
   const [freshBoard, setFreshBoard] = useState<string | null>(null);
   useEffect(() => setFreshBoard(null), [players]);
 
-  const active = players.filter((p) => p.active);
-  const escaped = active.filter((p) => p.lootbox_status === "escaped");
+  const active = useMemo(() => players.filter((p) => p.active), [players]);
   const ranked = useMemo(() => rankCandy(active), [active]);
-  const rankOf = (id: string) => ranked.findIndex((p) => p.id === id) + 1;
-  const selected = escaped.find((p) => p.id === selectedId) ?? null;
+  const escaped = useMemo(() => {
+    const needle = query.trim().toLowerCase();
+    return active
+      .filter((p) => p.lootbox_status === "escaped")
+      .filter((p) => !needle || [p.discord_display_name, p.discord_username].some((s) => s?.toLowerCase().includes(needle)))
+      .sort((a, b) => displayName(a).localeCompare(displayName(b)));
+  }, [active, query]);
+  const selected = active.find((p) => p.id === selectedId && p.lootbox_status === "escaped") ?? null;
   const neighbor = neighbors.find((n) => n.id === neighborId) ?? neighbors[0];
-  const left = selected ? Math.max(0, TREATS_PER_WINDOW - (treatsUsed[selected.id] ?? 0)) : 0;
+  const leftFor = (id: string) => Math.max(0, TREATS_PER_WINDOW - (treatsUsed[id] ?? 0));
   const hasTreat = selected ? treats.some((t) => t.player_id === selected.id && !t.undone) : false;
   const shown = result?.result && selected && result.result.player_id === selected.id ? result : null;
   const board = freshBoard ?? leaderboardText(players);
 
-  async function run(task: () => Promise<TreatActionResult>, keepResult = true) {
+  async function run(task: () => Promise<TreatActionResult>, onOk?: (res: TreatActionResult) => void) {
     if (busyRef.current) return;
     busyRef.current = true;
     setBusy(true);
@@ -57,8 +66,8 @@ export default function TreatTab({ players, items, neighbors, treats, treatsUsed
       if (!res.ok) setFlash(res);
       else {
         if (res.notice) setFlash(res);
-        if (keepResult) setResult(res.result ? res : null);
         if (res.leaderboard) setFreshBoard(res.leaderboard);
+        onOk?.(res);
       }
       router.refresh();
     } catch {
@@ -69,10 +78,18 @@ export default function TreatTab({ players, items, neighbors, treats, treatsUsed
     }
   }
 
-  const treat = () => selected && neighbor && run(() => trickOrTreat(selected.id, neighbor.id, crypto.randomUUID()));
-  const reroll = () => selected && run(() => rerollTreat(selected.id, crypto.randomUUID()));
+  // A treat (or reroll) result: total before = new total - candy from this treat.
+  function showTreat(res: TreatActionResult) {
+    setResult(res);
+    const r = res.result;
+    if (r) setChange({ playerId: r.player_id, from: r.total - r.candy, to: r.total });
+  }
+
+  const treat = () => selected && neighbor && run(() => trickOrTreat(selected.id, neighbor.id, crypto.randomUUID()), showTreat);
+  const reroll = () => selected && run(() => rerollTreat(selected.id, crypto.randomUUID()), showTreat);
   const undo = () => selected && confirm(`Undo ${displayName(selected)}'s last treat?`) &&
-    run(async () => { const r = await undoTreat(selected.id); setResult(null); return r; }, false);
+    run(() => undoTreat(selected.id), () => { setResult(null); setChange(null); });
+
   function editCandy(p: AdminPlayer) {
     const input = prompt(`Set ${displayName(p)}'s candy total:`, String(p.candy));
     if (input === null) return;
@@ -81,7 +98,7 @@ export default function TreatTab({ players, items, neighbors, treats, treatsUsed
       setFlash({ ok: false, error: "Enter a whole number, 0 or more." });
       return;
     }
-    run(() => setCandy(p.id, amount), false);
+    run(() => setCandy(p.id, amount), () => setChange({ playerId: p.id, from: p.candy, to: amount }));
   }
 
   async function copy(text: string, what: "message" | "leaderboard") {
@@ -94,104 +111,140 @@ export default function TreatTab({ players, items, neighbors, treats, treatsUsed
   }
 
   return (
-    <div className="treat-tab">
-      <div className="neighbor-bar">
-        <div className="neighbor-switch" role="radiogroup" aria-label="Neighbor">
-          {neighbors.map((n) => (
-            <button key={n.id} role="radio" aria-checked={n.id === neighbor.id}
-              className={`neighbor-option${n.id === neighbor.id ? " active" : ""}`} onClick={() => setNeighborId(n.id)}>
-              <span aria-hidden>{n.flag}</span> {n.name}
-            </button>
-          ))}
-        </div>
-        <p className="neighbor-odds">
-          {[...neighbor.neighbor_outcomes].sort((a, b) => a.sort_order - b.sort_order).map((o) => (
-            <span key={o.sort_order}>{o.candy} candy <span className="muted">{Number(o.weight)}%</span></span>
-          ))}
-        </p>
-      </div>
+    <div className="tt">
+      <div className="tt-grid">
+        {/* ---------- Left: neighbor, players, doorstep ---------- */}
+        <div className="tt-left">
+          <div className="tt-neighbor">
+            <label htmlFor="tt-neighbor" className="tt-label">Neighbor</label>
+            <select id="tt-neighbor" className="input tt-select" value={neighbor.id}
+              onChange={(e) => { setNeighborId(e.target.value); setResult(null); }}>
+              {neighbors.map((n) => <option key={n.id} value={n.id}>{n.flag} {n.name}</option>)}
+            </select>
+            <ul className="tt-odds" aria-label={`${neighbor.name}'s odds`}>
+              {[...neighbor.neighbor_outcomes].sort((a, b) => a.sort_order - b.sort_order).map((o) => (
+                <li key={o.sort_order}><strong>{o.candy}</strong> <span>{Number(o.weight)}%</span></li>
+              ))}
+            </ul>
+          </div>
 
-      <div className="admin-grid">
-        <PlayerPicker players={escaped} items={items} selectedId={selected?.id ?? null}
-          onSelect={(id) => { setSelectedId(id); setResult(null); setFlash(null); }}
-          emptyText="No escaped players yet. Only escaped players can trick-or-treat."
-          meta={(p) => {
-            const l = Math.max(0, TREATS_PER_WINDOW - (treatsUsed[p.id] ?? 0));
-            return <><span className="candy-count">{p.candy}</span><span className={`treat-pill${l > 0 ? " ready" : ""}`}>{l} left</span></>;
-          }} />
+          <section className="tt-players" aria-labelledby="tt-players-h">
+            <div className="tt-players-head">
+              <h3 id="tt-players-h">Who&apos;s knocking?</h3>
+              <input className="input tt-search" type="search" placeholder="Search" aria-label="Search escaped players"
+                value={query} onChange={(e) => setQuery(e.target.value)} />
+            </div>
+            {escaped.length === 0 ? (
+              <p className="empty">{query ? "No players found." : "No escaped players yet. Only escaped players can trick-or-treat."}</p>
+            ) : (
+              <ul className="tt-tiles">
+                {escaped.map((p) => {
+                  const ready = leftFor(p.id) > 0;
+                  return (
+                    <li key={p.id}>
+                      <button className={`tt-tile${p.id === selected?.id ? " active" : ""}${ready ? "" : " used"}`}
+                        aria-pressed={p.id === selected?.id}
+                        onClick={() => { setSelectedId(p.id); setResult(null); setFlash(null); }}>
+                        <Avatar src={p.discord_avatar_url} name={displayName(p)} size={40} />
+                        <span className="tt-tile-name" title={displayName(p)}>{displayName(p)}</span>
+                        <span className="tt-tile-meta">
+                          <span className="tt-tile-candy">{p.candy}</span>
+                          <span className={`tt-dot${ready ? " ready" : ""}`}>{ready ? "Ready" : "Done"}</span>
+                        </span>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </section>
 
-        <div className="open-main">
-          {!selected ? (
-            <div className="panel empty-state"><p>Pick an escaped player to trick-or-treat.</p></div>
-          ) : (
-            <>
-              <div className="panel open-head">
-                <Avatar src={selected.discord_avatar_url} name={displayName(selected)} size={64} />
-                <div className="open-id">
+          {selected && (
+            <section className="tt-door" aria-label={`${displayName(selected)} at ${neighbor.name}'s door`}>
+              <div className="tt-door-head">
+                <Avatar src={selected.discord_avatar_url} name={displayName(selected)} size={48} />
+                <div className="tt-door-who">
                   <h2>{displayName(selected)}</h2>
-                  <p className="treat-standing">#{rankOf(selected.id)} on the leaderboard, <strong>{selected.candy}</strong> candy</p>
-                </div>
-                <div className={`boxes-left${left === 0 ? " none" : ""}`}>
-                  <span className="boxes-num">{left}</span>
-                  <span className="muted small">treats left now</span>
+                  <p>
+                    {leftFor(selected.id) > 0 ? "Treat ready this window" : "Already trick-or-treated this window"}
+                  </p>
                 </div>
               </div>
-
-              <div className="open-actions">
-                <button className="btn btn-primary btn-big" disabled={busy || left < 1} onClick={treat}>
-                  {busy ? "Knocking..." : `Trick or Treat at ${neighbor.name}'s`}
+              <div className="tt-actions">
+                <button className="btn btn-big tt-knock" disabled={busy || leftFor(selected.id) < 1} onClick={treat}>
+                  {busy ? "Knocking..." : <>🎃 Knock on {neighbor.name}&apos;s door</>}
                 </button>
-                <button className="btn btn-orange btn-big" disabled={busy || !hasTreat} onClick={reroll}>Reroll last</button>
-                <button className="btn btn-danger" disabled={busy || !hasTreat} onClick={undo}>Undo last</button>
+                <div className="tt-secondary">
+                  <button className="btn" disabled={busy || !hasTreat} onClick={reroll}>Reroll last</button>
+                  <button className="btn btn-danger" disabled={busy || !hasTreat} onClick={undo}>Undo last</button>
+                </div>
               </div>
 
               {shown?.result && (
-                <>
-                  <div className="panel treat-result">
-                    <Image src="/assets/lootbox-mania-logo.png" alt="" width={96} height={96} className="treat-candy" />
-                    <div>
-                      <p className="treat-amount">+{shown.result.candy} candy</p>
-                      <p className="treat-line"><span aria-hidden>{shown.result.flag}</span> <strong>{shown.result.neighbor}:</strong> {treatMessagePlain(shown.result.message)}</p>
-                      <p className="treat-total">New total: <strong>{shown.result.total}</strong>{shown.result.replayed ? " (already rolled, showing the saved result)" : ""}</p>
-                    </div>
+                <div className="tt-result">
+                  <Image src="/assets/lootbox-mania-logo.png" alt="" width={72} height={72} className="tt-candy" />
+                  <div>
+                    <p className="tt-amount">+{shown.result.candy} candy</p>
+                    <p className="tt-line"><span aria-hidden>{shown.result.flag}</span> <strong>{shown.result.neighbor}:</strong> {treatMessagePlain(shown.result.message)}</p>
+                    {shown.result.replayed && <p className="muted small">Already rolled. Showing the saved result.</p>}
                   </div>
-                  <div className="panel discord-box">
-                    <div className="discord-head">
-                      <h3>For Discord</h3>
-                      <button className="btn btn-sm btn-primary" onClick={() => copy(shown.discordText ?? "", "message")}>
-                        {copied === "message" ? "Copied" : "Copy message"}
-                      </button>
-                    </div>
-                    <textarea className="input discord-text" readOnly aria-label="Discord message" rows={3} value={shown.discordText ?? ""} />
-                  </div>
-                </>
+                </div>
               )}
-            </>
+              {shown?.discordText && (
+                <div className="tt-copy">
+                  <textarea className="input discord-text" readOnly aria-label="Discord message" rows={2} value={shown.discordText} />
+                  <button className="btn btn-sm btn-primary" onClick={() => copy(shown.discordText ?? "", "message")}>
+                    {copied === "message" ? "Copied" : "Copy message"}
+                  </button>
+                </div>
+              )}
+            </section>
           )}
-
-          <section className="panel candy-board" aria-labelledby="candy-board-h">
-            <div className="discord-head">
-              <h3 id="candy-board-h">Candy Leaderboard</h3>
-              <div className="discord-buttons">
-                <a className="btn btn-sm" href={LEADERBOARD_MESSAGE_URL} target="_blank" rel="noopener noreferrer">Open message ↗</a>
-                <button className="btn btn-sm btn-orange" onClick={() => copy(board, "leaderboard")}>
-                  {copied === "leaderboard" ? "Leaderboard copied" : "Copy leaderboard"}
-                </button>
-              </div>
-            </div>
-            <p className="muted small hint">Copy, open the message, click Edit, select all, paste, and save.</p>
-            <ol className="candy-list">
-              {ranked.map((p, i) => (
-                <li key={p.id} className={p.id === selected?.id ? "current" : undefined}>
-                  <span className="candy-rank">#{i + 1}</span>
-                  <span className="candy-name">{displayName(p)}</span>
-                  <span className="candy-total">{p.candy}</span>
-                  <button className="btn btn-sm candy-edit" onClick={() => editCandy(p)} aria-label={`Set ${displayName(p)}'s candy`}>Edit</button>
-                </li>
-              ))}
-            </ol>
-          </section>
         </div>
+
+        {/* ---------- Right: Discord-look leaderboard ---------- */}
+        <section className="tt-board" aria-labelledby="tt-board-h">
+          <div className="tt-board-bar">
+            <a className="btn btn-sm" href={LEADERBOARD_MESSAGE_URL} target="_blank" rel="noopener noreferrer">Open message ↗</a>
+            <button className="btn btn-sm btn-orange" onClick={() => copy(board, "leaderboard")}>
+              {copied === "leaderboard" ? "Leaderboard copied" : "Copy leaderboard"}
+            </button>
+          </div>
+          <div className="dc-message">
+            <h3 id="tt-board-h" className="dc-title">
+              <Image src="/assets/lootbox-mania-logo.png" alt="" width={22} height={22} className="dc-candy" />
+              <span>{LEADERBOARD_TITLE}</span>:
+            </h3>
+            <ol className="dc-list">
+              {ranked.map((p, i) => {
+                const changed = change?.playerId === p.id ? change : null;
+                return (
+                  <li key={p.id} className={changed ? "changed" : undefined}>
+                    <span className="dc-rank">#{i + 1}.</span>{" "}
+                    <span className="dc-mention" title={displayName(p)}>@{displayName(p)}</span>
+                    <span className="dc-amount">
+                      {" - "}
+                      {changed ? (
+                        <>
+                          <span className="dc-old">{changed.from}</span>
+                          <span aria-hidden> → </span>
+                          <span className="sr-only"> changed to </span>
+                          <strong>{changed.to}</strong>
+                          <span className={`dc-delta${changed.to < changed.from ? " down" : ""}`}>
+                            {changed.to >= changed.from ? "+" : ""}{changed.to - changed.from}
+                          </span>
+                        </>
+                      ) : p.candy}
+                    </span>{" "}
+                    <Image src="/assets/lootbox-mania-logo.png" alt="candy" width={18} height={18} className="dc-candy" />
+                    <button className="dc-edit" onClick={() => editCandy(p)} aria-label={`Set ${displayName(p)}'s candy`}>Edit</button>
+                  </li>
+                );
+              })}
+            </ol>
+          </div>
+          <p className="muted small tt-hint">Copy it, open the message, click Edit, select all, paste, and save.</p>
+        </section>
       </div>
     </div>
   );

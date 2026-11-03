@@ -197,33 +197,68 @@
 .shot-almost-label { font-weight: 700; font-size: 17px; letter-spacing: .06em; text-transform: uppercase; color: #fff; }
 .shot-almost-list { font-family: var(--ui); font-size: 16px; font-weight: 700; color: var(--common); overflow: hidden; text-overflow: ellipsis; }
 
-/* ---------- Trick-or-Treat ---------- */
-.treat-tab { display: grid; gap: 12px; }
-.neighbor-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; }
-.neighbor-switch { display: flex; flex-wrap: wrap; gap: 6px; }
-.neighbor-option { min-height: var(--tap); padding: 6px 16px; border-radius: 999px; border: 1px solid var(--line-strong); background: var(--panel-2); cursor: pointer; font-size: 16px; color: var(--muted); }
-.neighbor-option:hover { color: var(--text); }
-.neighbor-option.active { color: var(--text); font-weight: 700; border-color: var(--purple); background: var(--purple-bg); }
-.neighbor-odds { display: flex; flex-wrap: wrap; gap: 4px 14px; font-family: var(--ui); font-size: 13px; }
-.candy-count { font-weight: 700; color: var(--text); }
-.treat-pill { font-size: 12px; background: #23232c; border-radius: 99px; padding: 0 7px; color: var(--muted); }
-.treat-pill.ready { color: var(--ready); border: 1px solid #5a5866; }
-.treat-standing { font-family: var(--ui); font-size: 14px; color: var(--muted); margin-top: 2px; }
-.treat-standing strong { color: var(--text); }
-.treat-result { display: flex; align-items: center; gap: 16px; animation: pop .28s ease-out; }
-.treat-candy { width: 72px; height: 72px; object-fit: contain; flex: none; }
-.treat-amount { font-size: 30px; font-weight: 700; line-height: 1.1; }
-.treat-line { margin-top: 4px; overflow-wrap: anywhere; }
-.treat-total { font-family: var(--ui); font-size: 14px; color: var(--muted); margin-top: 4px; }
-.treat-total strong { color: var(--text); }
-@media (min-width: 600px) { .treat-candy { width: 96px; height: 96px; } .treat-amount { font-size: 36px; } }
-@media (prefers-reduced-motion: reduce) { .treat-result { animation: none; } }
-.candy-board .hint { margin: 4px 0 6px; }
-.candy-list { list-style: none; margin: 0; padding: 0; max-height: 60vh; overflow-y: auto; }
-.candy-list li { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto auto; align-items: center; gap: 10px; padding: 4px 0; border-bottom: 1px solid var(--line); }
-.candy-list li:last-child { border-bottom: 0; }
-.candy-list li.current { background: var(--purple-bg); border-radius: 6px; }
-.candy-rank { font-family: var(--ui); font-weight: 700; color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
-.candy-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.candy-total { font-weight: 700; font-variant-numeric: tabular-nums; }
-.candy-edit { min-height: 32px; padding: 2px 10px; }
+/* ---------- Trick-or-Treat ----------
+   Pumpkin-orange theme so it doesn't read like the lootbox tab:
+   player tiles + doorstep on the left, a Discord-look leaderboard on the right. */
+.tt { --pumpkin: #ff8a3d; --pumpkin-bg: #2a1708; --pumpkin-line: #7a3d14; }
+.tt-grid { display: grid; gap: 14px; align-items: start; }
+@media (min-width: 1100px) { .tt-grid { grid-template-columns: minmax(0, 1fr) minmax(360px, 440px); } }
+.tt-left { display: grid; gap: 12px; min-width: 0; }
+.tt-label { font-family: var(--ui); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+
+.tt-neighbor { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 10px 12px; border: 1px solid var(--pumpkin-line); border-radius: 12px; background: var(--pumpkin-bg); }
+.tt-select { width: auto; min-width: 200px; font-size: 17px; font-weight: 700; border-color: var(--pumpkin-line); }
+.tt-odds { list-style: none; margin: 0 0 0 auto; padding: 0; display: flex; flex-wrap: wrap; gap: 4px; }
+.tt-odds li { font-family: var(--ui); font-size: 13px; padding: 2px 8px; border-radius: 999px; background: #16161c; border: 1px solid var(--line-strong); }
+.tt-odds li span { color: var(--muted); }
+
+.tt-players-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+.tt-players-head h3 { font-size: 18px; font-weight: 700; }
+.tt-search { width: 200px; min-height: 36px; padding: 6px 10px; }
+.tt-tiles { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; }
+.tt-tile { width: 100%; display: grid; justify-items: center; gap: 4px; padding: 10px 6px 8px; border-radius: 12px; border: 1px solid var(--line); background: var(--panel-2); cursor: pointer; text-align: center; }
+.tt-tile:hover { border-color: var(--pumpkin); }
+.tt-tile.active { border-color: var(--pumpkin); box-shadow: 0 0 0 2px var(--pumpkin) inset; background: var(--pumpkin-bg); }
+.tt-tile.used:not(.active) { opacity: .55; }
+.tt-tile-name { max-width: 100%; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tt-tile-meta { display: flex; align-items: center; gap: 6px; font-family: var(--ui); font-size: 12px; }
+.tt-tile-candy { font-weight: 700; }
+.tt-dot { color: var(--muted); }
+.tt-dot.ready { color: var(--pumpkin); font-weight: 700; }
+
+.tt-door { display: grid; gap: 12px; padding: 14px; border-radius: 14px; border: 2px dashed var(--pumpkin-line); background: #17130f; }
+.tt-door-head { display: flex; align-items: center; gap: 12px; }
+.tt-door-who h2 { font-size: 22px; line-height: 1.1; overflow-wrap: anywhere; }
+.tt-door-who p { font-family: var(--ui); font-size: 14px; color: var(--muted); }
+.tt-actions { display: grid; gap: 8px; }
+.tt-knock { background: linear-gradient(#ff9d54, #f07a1e); border-color: #b8560e; color: #241200; width: 100%; }
+.tt-knock:hover:not(:disabled) { background: linear-gradient(#ffad6e, #f5862e); }
+.tt-secondary { display: flex; gap: 8px; }
+.tt-secondary .btn { flex: 1; }
+.tt-result { display: flex; align-items: center; gap: 14px; padding: 10px 12px; border-radius: 12px; background: var(--pumpkin-bg); border: 1px solid var(--pumpkin-line); animation: pop .28s ease-out; }
+.tt-candy { width: 64px; height: 64px; object-fit: contain; flex: none; }
+.tt-amount { font-size: 30px; font-weight: 700; line-height: 1.1; color: var(--pumpkin); }
+.tt-line { margin-top: 2px; overflow-wrap: anywhere; }
+@media (prefers-reduced-motion: reduce) { .tt-result { animation: none; } }
+.tt-copy { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: start; }
+
+/* Discord-look leaderboard (Discord's dark theme colors). */
+.tt-board { display: grid; gap: 8px; min-width: 0; }
+.tt-board-bar { display: flex; justify-content: flex-end; gap: 8px; flex-wrap: wrap; }
+.dc-message { background: #313338; border-radius: 8px; padding: 12px 14px 12px 12px; border-left: 4px solid #4e5058; font-family: "gg sans", "Noto Sans", Arial, Helvetica, sans-serif; color: #dbdee1; font-size: 16px; line-height: 1.6; }
+.dc-title { display: flex; align-items: center; gap: 6px; font-family: inherit; font-size: 20px; font-weight: 700; color: #f2f3f5; margin-bottom: 4px; }
+.dc-title span { text-decoration: underline; text-underline-offset: 3px; }
+.dc-candy { width: 18px; height: 18px; object-fit: contain; vertical-align: -3px; }
+.dc-title .dc-candy { width: 22px; height: 22px; }
+.dc-list { list-style: none; margin: 0; padding: 0; }
+.dc-list li { position: relative; padding: 1px 52px 1px 4px; border-radius: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dc-list li:hover { background: #2e3035; }
+.dc-rank { color: #dbdee1; }
+.dc-mention { background: rgba(88, 101, 242, .3); color: #c9cdfb; border-radius: 3px; padding: 0 2px; font-weight: 500; }
+.dc-list li.changed { background: rgba(255, 138, 61, .14); box-shadow: inset 3px 0 0 #ff8a3d; }
+.dc-old { color: #949ba4; text-decoration: line-through; }
+.dc-delta { margin-left: 6px; font-size: 13px; font-weight: 700; color: #57f287; }
+.dc-delta.down { color: #fa777c; }
+.dc-edit { position: absolute; right: 2px; top: 50%; transform: translateY(-50%); font-family: var(--ui); font-size: 12px; color: #b5bac1; background: #1e1f22; border: 1px solid #3f4147; border-radius: 4px; padding: 1px 8px; cursor: pointer; }
+.dc-edit:hover, .dc-edit:focus-visible { color: #fff; border-color: #6d6f78; }
+.tt-hint { margin: 0; }
