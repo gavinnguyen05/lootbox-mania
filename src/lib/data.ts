@@ -90,7 +90,7 @@ export async function getAdminData(windowKey: string) {
     db.from("admin_actions").select("id, action_type, player_id, metadata, created_at")
       .order("id", { ascending: false }).limit(100).then(must<AdminAction[]>),
     getWindowUsage(windowKey, db),
-    db.from("neighbors").select("id, name, flag, emoji_code, sort_order, neighbor_outcomes(weight, candy, message, sort_order)")
+    db.from("neighbors").select("id, name, flag, emoji_code, sort_order, icon_path, neighbor_outcomes(weight, candy, message, sort_order)")
       .eq("active", true).order("sort_order").then(must<Neighbor[]>),
     db.from("treats").select("id, player_id, neighbor_id, candy, created_at, undone").order("id", { ascending: false }).limit(50).then(must<TreatRow[]>),
     // Regular treats used this window (bonus treats don't count against the 1).

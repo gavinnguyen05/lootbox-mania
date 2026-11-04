@@ -58,6 +58,7 @@ export interface Neighbor {
   flag: string;
   emoji_code: string;
   sort_order: number;
+  icon_path: string | null;
   neighbor_outcomes: NeighborOutcome[];
 }
 

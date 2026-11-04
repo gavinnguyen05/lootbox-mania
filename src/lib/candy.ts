@@ -31,7 +31,14 @@ export function treatMessage(template: string, neighborEmoji: string, candy: num
   return template.replace("{neighbor}", neighborEmoji).replace("{candies}", CANDY_EMOJI.repeat(candy));
 }
 
-/** The same line for reading on the admin page: no emoji codes or bold marks. */
+/** The same line for reading on the admin page: no Discord emoji codes or bold marks. */
 export function treatMessagePlain(template: string): string {
-  return template.replace("{neighbor}", "").replace("{candies}", "").replace(/\*\*/g, "").replace(/\s+/g, " ").trim();
+  return template
+    .replace("{neighbor}", "")
+    .replace("{candies}", "")
+    .replace(/<a?:\w+:\d+>/g, "") // custom Discord emojis like <:johan:123>
+    .replace(/\*\*/g, "")
+    .replace(/\s+([?.!,])/g, "$1")
+    .replace(/\s+/g, " ")
+    .trim();
 }

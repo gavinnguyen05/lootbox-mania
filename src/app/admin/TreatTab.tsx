@@ -121,10 +121,13 @@ export default function TreatTab({ players, neighbors, treats, treatsUsed, setFl
         {/* ---------- Left: neighbor, players, doorstep ---------- */}
         <div className="tt-left">
           <div className="tt-neighbor">
+            {neighbor.icon_path
+              ? <Image src={neighbor.icon_path} alt="" width={36} height={36} className="tt-neighbor-icon" />
+              : <span className="tt-neighbor-flag" aria-hidden>{neighbor.flag}</span>}
             <label htmlFor="tt-neighbor" className="tt-label">Neighbor</label>
             <select id="tt-neighbor" className="input tt-select" value={neighbor.id}
               onChange={(e) => { setNeighborId(e.target.value); setResult(null); }}>
-              {neighbors.map((n) => <option key={n.id} value={n.id}>{n.flag} {n.name}</option>)}
+              {neighbors.map((n) => <option key={n.id} value={n.id}>{n.flag ? `${n.flag} ` : ""}{n.name}</option>)}
             </select>
             <ul className="tt-odds" aria-label={`${neighbor.name}'s odds`}>
               {[...neighbor.neighbor_outcomes].sort((a, b) => a.sort_order - b.sort_order).map((o) => (
@@ -202,7 +205,12 @@ export default function TreatTab({ players, neighbors, treats, treatsUsed, setFl
                   <Image src="/assets/lootbox-mania-logo.png" alt="" width={72} height={72} className="tt-candy" />
                   <div>
                     <p className="tt-amount">+{shown.result.candy} candy</p>
-                    <p className="tt-line"><span aria-hidden>{shown.result.flag}</span> <strong>{shown.result.neighbor}:</strong> {treatMessagePlain(shown.result.message)}</p>
+                    <p className="tt-line">
+                      {neighbor.id === shown.result.neighbor_id && neighbor.icon_path
+                        ? <Image src={neighbor.icon_path} alt="" width={22} height={22} className="tt-line-icon" />
+                        : <span aria-hidden>{shown.result.flag}</span>}{" "}
+                      <strong>{shown.result.neighbor}:</strong> {treatMessagePlain(shown.result.message)}
+                    </p>
                     {shown.result.replayed && <p className="muted small">Already rolled. Showing the saved result.</p>}
                   </div>
                 </div>
