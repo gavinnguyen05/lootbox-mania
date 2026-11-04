@@ -22,6 +22,14 @@ export function itemId(v: unknown): string {
   return v as string;
 }
 
+/** A list of distinct UUIDs, 1 to max long. */
+export function uuidList(v: unknown, max: number, what = "players"): string[] {
+  check(Array.isArray(v) && v.length >= 1 && v.length <= max, what);
+  const ids = (v as unknown[]).map((x) => uuid(x, what));
+  check(new Set(ids).size === ids.length, what);
+  return ids;
+}
+
 export function neighborId(v: unknown): string {
   check(typeof v === "string" && ITEM_ID.test(v), "neighbor");
   return v as string;

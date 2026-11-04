@@ -19,7 +19,7 @@ import { CHECKLIST_RARITIES } from "@/lib/rarity";
 import { rateLimited } from "@/lib/rate-limit";
 import * as v from "@/lib/validate";
 import type { Item, PlayerItem, RollResult, TreatResult } from "@/lib/types";
-import { leaderboardText, treatMessage, type CandyPlayer } from "@/lib/candy";
+import { eventMessage, leaderboardText, treatMessage, type CandyPlayer } from "@/lib/candy";
 
 export interface ActionResult {
   ok: boolean;
@@ -45,6 +45,11 @@ const GAME_ERRORS: Record<string, string> = {
   PLAYER_NOT_ESCAPED: "Only escaped players can trick-or-treat.",
   NO_TREATS_LEFT: "No treats left in this window.",
   NEIGHBOR_NOT_FOUND: "That neighbor isn't set up.",
+  INVALID_PLAYERS: "Pick at least one player (each only once).",
+  CANDY_BELOW_ZERO: "That would put someone below 0 candy. Nobody was changed.",
+  LATER_CANDY_CHANGES: "Someone in that event has gained or lost candy since, so it can't be undone. Fix totals with Edit instead.",
+  EVENT_NOT_FOUND: "That event doesn't exist.",
+  EVENT_ALREADY_UNDONE: "That event was already undone.",
   MANUAL_EDIT_AFTER_TREAT: "Their candy was changed by hand after that treat, so it can't be undone. Fix the total instead.",
   NO_BONUS_TO_REMOVE: "This player has no bonus boxes to remove.",
   TOO_MANY_BONUS: "That's the most bonus boxes a player can hold (99).",
@@ -230,6 +235,48 @@ export async function grantTreat(playerId: unknown, delta: unknown): Promise<Tre
     const now = await rpc<number>("admin_grant_treat", { p_player_id: v.uuid(playerId, "player"), p_delta: d });
     refreshPages();
     return { ok: true, notice: d > 0 ? `Added a bonus treat (${now} bonus).` : `Removed a bonus treat (${now} bonus).` };
+  } catch (e) {
+    return fail(e);
+  }
+}
+
+export interface EventActionResult extends ActionResult {
+  changes?: { player_id: string; from: number; to: number }[];
+  discordText?: string;
+  leaderboard?: string;
+}
+
+/** Give (or take) the same amount of candy to a group, all at once. Logged and undoable. */
+export async function giveCandy(playerIds: unknown, amount: unknown, name: unknown): Promise<EventActionResult> {
+  try {
+    await requireAdmin();
+    const ids = v.uuidList(playerIds, 100);
+    const n = v.int(amount, -1000, 1000, "amount");
+    if (n === 0) throw new v.InvalidInput("Enter an amount other than 0.");
+    const title = typeof name === "string" ? name.trim().slice(0, 60) : "";
+    const res = await rpc<{ event_id: number; players: { player_id: string; candy_before: number; candy_after: number }[] }>(
+      "admin_give_candy", { p_player_ids: ids, p_amount: n, p_name: title });
+    const { data: rows } = await serviceClient().from("players").select("id, discord_user_id").in("id", ids);
+    const discordIds = ids.map((id) => rows?.find((r) => r.id === id)?.discord_user_id).filter((x): x is string => Boolean(x));
+    refreshPages();
+    return {
+      ok: true,
+      notice: `${n > 0 ? "Gave" : "Took"} ${Math.abs(n)} candy ${n > 0 ? "to" : "from"} ${ids.length} player${ids.length === 1 ? "" : "s"}.`,
+      changes: res.players.map((p) => ({ player_id: p.player_id, from: p.candy_before, to: p.candy_after })),
+      discordText: eventMessage(title, n, discordIds),
+      leaderboard: await freshLeaderboard(),
+    };
+  } catch (e) {
+    return fail(e, "Couldn't give candy. Nobody was changed. Try again.");
+  }
+}
+
+export async function undoCandyEvent(eventId: unknown): Promise<EventActionResult> {
+  try {
+    await requireAdmin();
+    await rpc("admin_undo_candy_event", { p_event_id: v.int(eventId, 1, Number.MAX_SAFE_INTEGER, "event") });
+    refreshPages();
+    return { ok: true, notice: "Event undone. Everyone is back to their total from before it.", leaderboard: await freshLeaderboard() };
   } catch (e) {
     return fail(e);
   }

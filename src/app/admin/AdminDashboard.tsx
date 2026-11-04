@@ -7,7 +7,7 @@
 import { useMemo, useRef, useState, useTransition } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import type { AdminAction, AdminPlayer, Item, Neighbor, Roll, RollResult, TreatRow } from "@/lib/types";
+import type { AdminAction, AdminPlayer, CandyEvent, Item, Neighbor, Roll, RollResult, TreatRow } from "@/lib/types";
 import { RARITY, CHECKLIST_RARITIES } from "@/lib/rarity";
 import { ALMOST_THERE, buildRows, missingNames, progress } from "@/lib/progress";
 import { displayName } from "@/lib/names";
@@ -27,12 +27,14 @@ import {
 import { signOut } from "../login/actions";
 import PlayerPicker from "./PlayerPicker";
 import TreatTab from "./TreatTab";
+import EventsTab from "./EventsTab";
 import "./admin.css";
 
-type Tab = "open" | "treat" | "players" | "activity";
+type Tab = "open" | "treat" | "events" | "players" | "activity";
 const TABS: { id: Tab; label: string }[] = [
   { id: "open", label: "Open Lootbox" },
   { id: "treat", label: "Trick-or-Treat" },
+  { id: "events", label: "Events" },
   { id: "players", label: "Players" },
   { id: "activity", label: "Activity" },
 ];
@@ -48,6 +50,7 @@ interface Props {
   neighbors: Neighbor[];
   treats: TreatRow[];
   treatsUsed: Record<string, number>;
+  candyEvents: CandyEvent[];
 }
 
 type Shared = {
@@ -102,6 +105,7 @@ export default function AdminDashboard(props: Props) {
           <TreatTab players={props.players} neighbors={props.neighbors}
             treats={props.treats} treatsUsed={props.treatsUsed} setFlash={setFlash} />
         )}
+        {tab === "events" && <EventsTab players={props.players} events={props.candyEvents} setFlash={setFlash} />}
         {tab === "players" && <PlayersTab {...shared} players={props.players} selected={selected} onSelect={setSelectedId} />}
         {tab === "activity" && <ActivityTab {...shared} players={props.players} actions={props.actions} />}
       </div>
@@ -578,6 +582,7 @@ function summarize(a: AdminAction): string {
   }
   if (a.action_type === "set_status") return `${m.old} → ${m.new}`;
   if (a.action_type === "set_candy") return `candy ${m.old} → ${m.new}`;
+  if (a.action_type === "candy_event" || a.action_type === "undo_candy_event") return `${m.name || "Bonus candy"}: ${Number(m.amount) > 0 ? "+" : ""}${m.amount}${m.players ? ` for ${m.players} players` : ""}`;
   if (a.action_type === "grant_treat" || a.action_type === "remove_treat") return `bonus treats ${m.old} → ${m.new}`;
   if (a.action_type === "undo_treat") return `treat #${m.treat_id} (${m.candy} candy)`;
   if (a.action_type === "reroll_treat") return `replaced treat #${m.replaced_treat_id}`;

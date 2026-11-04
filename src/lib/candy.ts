@@ -42,3 +42,11 @@ export function treatMessagePlain(template: string): string {
     .replace(/\s+/g, " ")
     .trim();
 }
+
+/** Announcement for a candy event, e.g. 🎉 **Costume contest**: <@1>, <@2> get **+10 Candy** <:johan:…> */
+export function eventMessage(name: string, amount: number, discordIds: string[]): string {
+  const who = discordIds.map((id) => `<@${id}>`).join(", ");
+  const title = name.trim() || "Bonus candy";
+  const verb = amount > 0 ? (discordIds.length === 1 ? "gets" : "get") : (discordIds.length === 1 ? "loses" : "lose");
+  return `🎉 **${title}**: ${who} ${verb} **${amount > 0 ? "+" : ""}${amount} Candy** ${CANDY_EMOJI}`;
+}

@@ -10,8 +10,9 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import type { AdminPlayer, Neighbor, TreatRow } from "@/lib/types";
 import { displayName } from "@/lib/names";
-import { LEADERBOARD_MESSAGE_URL, LEADERBOARD_TITLE, leaderboardText, rankCandy, treatMessagePlain } from "@/lib/candy";
+import { leaderboardText, treatMessagePlain } from "@/lib/candy";
 import Avatar from "@/components/Avatar";
+import CandyBoard from "./CandyBoard";
 import { grantTreat, rerollTreat, setCandy, trickOrTreat, undoTreat, type ActionResult, type TreatActionResult } from "./actions";
 
 const TREATS_PER_WINDOW = 1;
@@ -34,13 +35,12 @@ export default function TreatTab({ players, neighbors, treats, treatsUsed, setFl
   const [change, setChange] = useState<Change | null>(null);
   const [busy, setBusy] = useState(false);
   const busyRef = useRef(false); // blocks a second click before React re-renders
-  const [copied, setCopied] = useState<"message" | "leaderboard" | null>(null);
+  const [copied, setCopied] = useState(false);
   // Leaderboard text returned by the last action, used until the page data refreshes.
   const [freshBoard, setFreshBoard] = useState<string | null>(null);
   useEffect(() => setFreshBoard(null), [players]);
 
   const active = useMemo(() => players.filter((p) => p.active), [players]);
-  const ranked = useMemo(() => rankCandy(active), [active]);
   const escaped = useMemo(() => {
     const needle = query.trim().toLowerCase();
     return active
@@ -64,7 +64,7 @@ export default function TreatTab({ players, neighbors, treats, treatsUsed, setFl
     busyRef.current = true;
     setBusy(true);
     setFlash(null);
-    setCopied(null);
+    setCopied(false);
     try {
       const res = await task();
       if (!res.ok) setFlash(res);
@@ -106,9 +106,9 @@ export default function TreatTab({ players, neighbors, treats, treatsUsed, setFl
     run(() => setCandy(p.id, amount), () => setChange({ playerId: p.id, from: p.candy, to: amount }));
   }
 
-  async function copy(text: string, what: "message" | "leaderboard") {
+  async function copyMessage(text: string) {
     await navigator.clipboard.writeText(text);
-    setCopied(what);
+    setCopied(true);
   }
 
   if (!neighbor) {
@@ -218,8 +218,8 @@ export default function TreatTab({ players, neighbors, treats, treatsUsed, setFl
               {shown?.discordText && (
                 <div className="tt-copy">
                   <textarea className="input discord-text" readOnly aria-label="Discord message" rows={2} value={shown.discordText} />
-                  <button className="btn btn-sm btn-primary" onClick={() => copy(shown.discordText ?? "", "message")}>
-                    {copied === "message" ? "Copied" : "Copy message"}
+                  <button className="btn btn-sm btn-primary" onClick={() => copyMessage(shown.discordText ?? "")}>
+                    {copied ? "Copied" : "Copy message"}
                   </button>
                 </div>
               )}
@@ -228,48 +228,8 @@ export default function TreatTab({ players, neighbors, treats, treatsUsed, setFl
         </div>
 
         {/* ---------- Right: Discord-look leaderboard ---------- */}
-        <section className="tt-board" aria-labelledby="tt-board-h">
-          <div className="tt-board-bar">
-            <a className="btn btn-sm" href={LEADERBOARD_MESSAGE_URL} target="_blank" rel="noopener noreferrer">Open message ↗</a>
-            <button className="btn btn-sm btn-orange" onClick={() => copy(board, "leaderboard")}>
-              {copied === "leaderboard" ? "Leaderboard copied" : "Copy leaderboard"}
-            </button>
-          </div>
-          <div className="dc-message">
-            <h3 id="tt-board-h" className="dc-title">
-              <Image src="/assets/lootbox-mania-logo.png" alt="" width={22} height={22} className="dc-candy" />
-              <span>{LEADERBOARD_TITLE}</span>:
-            </h3>
-            <ol className="dc-list">
-              {ranked.map((p, i) => {
-                const changed = change?.playerId === p.id ? change : null;
-                return (
-                  <li key={p.id} className={changed ? "changed" : undefined}>
-                    <span className="dc-rank">#{i + 1}.</span>{" "}
-                    <span className="dc-mention" title={displayName(p)}>@{displayName(p)}</span>
-                    <span className="dc-amount">
-                      {" - "}
-                      {changed ? (
-                        <>
-                          <span className="dc-old">{changed.from}</span>
-                          <span aria-hidden> → </span>
-                          <span className="sr-only"> changed to </span>
-                          <strong>{changed.to}</strong>
-                          <span className={`dc-delta${changed.to < changed.from ? " down" : ""}`}>
-                            {changed.to >= changed.from ? "+" : ""}{changed.to - changed.from}
-                          </span>
-                        </>
-                      ) : p.candy}
-                    </span>{" "}
-                    <Image src="/assets/lootbox-mania-logo.png" alt="candy" width={18} height={18} className="dc-candy" />
-                    <button className="dc-edit" onClick={() => editCandy(p)} aria-label={`Set ${displayName(p)}'s candy`}>Edit</button>
-                  </li>
-                );
-              })}
-            </ol>
-          </div>
-          <p className="muted small tt-hint">Copy it, open the message, click Edit, select all, paste, and save.</p>
-        </section>
+        <CandyBoard players={players} leaderboard={board} onEdit={editCandy}
+          changes={change ? { [change.playerId]: { from: change.from, to: change.to } } : {}} />
       </div>
     </div>
   );

@@ -78,6 +78,15 @@ export interface TreatResult {
   replayed: boolean;
 }
 
+export interface CandyEvent {
+  id: number;
+  name: string;
+  amount: number;
+  created_at: string;
+  undone: boolean;
+  players: { player_id: string; candy_before: number; candy_after: number }[];
+}
+
 export interface TreatRow {
   id: number;
   player_id: string;
