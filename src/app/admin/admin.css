@@ -300,3 +300,46 @@
 .ev-h-side { display: flex; align-items: center; gap: 8px; }
 .ev-plus { color: var(--uncommon); font-weight: 700; }
 .ev-minus { color: var(--red); font-weight: 700; }
+
+/* ---------- Candy Island (ocean blue) ---------- */
+.isl { --sea: #38bdf8; --sea-bg: #0c2230; --sea-line: #1e5a78; display: grid; gap: 14px; }
+.isl-top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+.isl-title { font-size: 24px; font-weight: 700; }
+.isl-game { font-family: var(--ui); font-size: 14px; font-weight: 400; color: var(--muted); margin-left: 6px; }
+.isl-count { font-family: var(--ui); color: var(--muted); }
+.isl-count strong { color: var(--sea); font-size: 18px; }
+.isl-top-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.isl-grid { display: grid; gap: 14px; align-items: start; }
+@media (min-width: 1100px) { .isl-grid { grid-template-columns: minmax(0, 1fr) minmax(300px, 380px); } }
+.isl-left { display: grid; gap: 12px; min-width: 0; }
+.isl-control { padding: 14px; border-radius: 14px; border: 1px solid var(--sea-line); background: var(--sea-bg); display: grid; gap: 8px; }
+.isl-control h3 { font-size: 18px; font-weight: 700; color: var(--sea); }
+.isl-control-row { display: flex; flex-wrap: wrap; align-items: end; gap: 12px; }
+.isl-number { width: 120px; font-size: 20px; font-weight: 700; }
+.isl-draw { flex: 1; min-width: 200px; background: linear-gradient(#5ccbfa, #1fa3e0); border-color: #1478a8; color: #04202e; }
+.isl-draw:hover:not(:disabled) { background: linear-gradient(#78d5fb, #33b0e8); }
+.isl-result { padding: 14px; border-radius: 14px; border: 1px solid var(--line-strong); background: var(--panel-2); display: grid; gap: 10px; }
+.isl-order { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 6px; }
+.isl-order li, .isl-left-over li, .isl-roster li { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.isl-order li { padding: 4px 8px; border-radius: 8px; background: var(--panel); border: 1px solid var(--line); }
+.isl-pos { min-width: 26px; font-family: var(--ui); font-weight: 700; color: var(--sea); text-align: right; font-variant-numeric: tabular-nums; }
+.isl-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.isl-left-over { padding: 10px 12px; border-radius: 10px; border: 1px dashed #5a5866; background: #141418; }
+.isl-left-over-title { font-family: var(--ui); font-size: 13px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+.isl-left-over ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 16px; }
+.isl-left-over li { opacity: .5; text-decoration: line-through; }
+/* Reveal: names appear one by one, then the left-overs. */
+.isl-order.reveal li, .isl-left-over.reveal { animation: isl-in .3s ease-out both; animation-delay: calc(var(--i) * 110ms); }
+@keyframes isl-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+.isl-left-over.reveal li { animation: none; }
+@media (prefers-reduced-motion: reduce) { .isl-order.reveal li, .isl-left-over.reveal { animation: none; } }
+.isl-history { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: 15px; }
+.isl-roster { padding: 14px; border-radius: 14px; border: 1px solid var(--line); background: var(--panel-2); }
+.isl-roster h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+.isl-roster ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.isl-roster li { padding: 4px 6px; border-radius: 8px; }
+.isl-roster li.out { opacity: .4; }
+.isl-roster li.out .isl-name { text-decoration: line-through; }
+.isl-in-tag, .isl-out-tag { margin-left: auto; flex: none; font-family: var(--ui); font-size: 12px; border-radius: 999px; padding: 0 8px; border: 1px solid; }
+.isl-in-tag { color: var(--sea); border-color: var(--sea-line); }
+.isl-out-tag { color: var(--muted); border-color: var(--line-strong); }

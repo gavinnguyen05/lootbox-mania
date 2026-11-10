@@ -4,7 +4,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { publicClient } from "./supabase/public";
 import { serviceClient } from "./supabase/service";
 import { SLUG } from "./validate";
-import type { AdminAction, AdminPlayer, CandyEvent, Item, Neighbor, PlayerWithItems, Roll, TreatRow } from "./types";
+import type { AdminAction, AdminPlayer, CandyEvent, IslandRound, IslandState, Item, Neighbor, PlayerWithItems, Roll, TreatRow } from "./types";
 
 // Explicit columns only. Public queries can't use * anyway: the anon key is
 // only granted these columns.
@@ -82,7 +82,7 @@ export async function getEscapeTimes(): Promise<Record<string, string>> {
 /** Everything the admin dashboard needs, in parallel. Service role, admin only. */
 export async function getAdminData(windowKey: string) {
   const db = serviceClient();
-  const [items, players, rolls, actions, used, neighbors, treats, treatsUsedRows, candyEvents] = await Promise.all([
+  const [items, players, rolls, actions, used, neighbors, treats, treatsUsedRows, candyEvents, island] = await Promise.all([
     db.from("lootbox_items").select(ITEM_COLS).order("sort_order").then(must<Item[]>),
     db.from("players").select(`${PLAYER_COLS}, discord_user_id, active, candy, candy_reached_at, bonus_treats, player_lootbox_items(${PLAYER_ITEM_COLS})`)
       .order("discord_display_name").then(must<AdminPlayer[]>),
@@ -96,10 +96,22 @@ export async function getAdminData(windowKey: string) {
     // Regular treats used this window (bonus treats don't count against the 1).
     db.from("treats").select("player_id").eq("claim_window", windowKey).eq("undone", false).eq("used_bonus", false).then(must<{ player_id: string }[]>),
     db.from("candy_events").select("id, name, amount, created_at, undone, players").order("id", { ascending: false }).limit(15).then(must<CandyEvent[]>),
+    getIslandState(db),
   ]);
   const treatsUsed: Record<string, number> = {};
   for (const t of treatsUsedRows) treatsUsed[t.player_id] = (treatsUsed[t.player_id] ?? 0) + 1;
-  return { items, players, rolls, actions, used, neighbors, treats, treatsUsed, candyEvents };
+  return { items, players, rolls, actions, used, neighbors, treats, treatsUsed, candyEvents, island };
+}
+
+/** Candy Island: the current game and its rounds so far. Admin only. */
+async function getIslandState(db: SupabaseClient): Promise<IslandState> {
+  const meta = must(await db.from("island_meta").select("season").eq("id", 1).maybeSingle()) as { season: number } | null;
+  const season = meta?.season ?? 1;
+  const rounds: IslandRound[] = must(
+    await db.from("island_rounds").select("id, round, picked, remaining, created_at")
+      .eq("season", season).eq("undone", false).order("id"),
+  );
+  return { season, rounds };
 }
 
 export function byId<T extends { id: string }>(rows: T[]): Record<string, T> {

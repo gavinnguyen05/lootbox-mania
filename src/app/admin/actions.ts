@@ -45,6 +45,7 @@ const GAME_ERRORS: Record<string, string> = {
   PLAYER_NOT_ESCAPED: "Only escaped players can trick-or-treat.",
   NO_TREATS_LEFT: "No treats left in this window.",
   NEIGHBOR_NOT_FOUND: "That neighbor isn't set up.",
+  INVALID_REMAINING: "Pick a number from 1 up to one less than the players still on the island.",
   INVALID_PLAYERS: "Pick at least one player (each only once).",
   CANDY_BELOW_ZERO: "That would put someone below 0 candy. Nobody was changed.",
   LATER_CANDY_CHANGES: "Someone in that event has gained or lost candy since, so it can't be undone. Fix totals with Edit instead.",
@@ -277,6 +278,48 @@ export async function undoCandyEvent(eventId: unknown): Promise<EventActionResul
     await rpc("admin_undo_candy_event", { p_event_id: v.int(eventId, 1, Number.MAX_SAFE_INTEGER, "event") });
     refreshPages();
     return { ok: true, notice: "Event undone. Everyone is back to their total from before it.", leaderboard: await freshLeaderboard() };
+  } catch (e) {
+    return fail(e);
+  }
+}
+
+export interface IslandActionResult extends ActionResult {
+  round?: number;
+  picked?: string[];
+  remaining?: string[];
+}
+
+/** Draw names until `remaining` are left. The server shuffles; those left over are out. */
+export async function islandRun(remaining: unknown, requestId: unknown): Promise<IslandActionResult> {
+  try {
+    await requireAdmin();
+    const r = await rpc<{ round: number; picked: string[]; remaining: string[] }>("island_run", {
+      p_remaining: v.int(remaining, 1, 1000, "number to remain"), p_request_id: v.uuid(requestId, "request"),
+    });
+    refreshPages();
+    return { ok: true, round: r.round, picked: r.picked, remaining: r.remaining };
+  } catch (e) {
+    return fail(e, "Couldn't run the draw. Try again.");
+  }
+}
+
+export async function islandUndo(): Promise<IslandActionResult> {
+  try {
+    await requireAdmin();
+    const r = await rpc<{ round: number }>("island_undo", {});
+    refreshPages();
+    return { ok: true, notice: `Undid round ${r.round}. Those players are back on the island.` };
+  } catch (e) {
+    return fail(e);
+  }
+}
+
+export async function islandReset(): Promise<IslandActionResult> {
+  try {
+    await requireAdmin();
+    await rpc("island_reset", {});
+    refreshPages();
+    return { ok: true, notice: "New game started. Everyone is back on the island." };
   } catch (e) {
     return fail(e);
   }

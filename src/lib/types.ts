@@ -87,6 +87,19 @@ export interface CandyEvent {
   players: { player_id: string; candy_before: number; candy_after: number }[];
 }
 
+export interface IslandRound {
+  id: number;
+  round: number;
+  picked: string[];      // player ids, in draw order
+  remaining: string[];   // player ids left over (out of the island)
+  created_at: string;
+}
+
+export interface IslandState {
+  season: number;
+  rounds: IslandRound[]; // this game, oldest first, not undone
+}
+
 export interface TreatRow {
   id: number;
   player_id: string;

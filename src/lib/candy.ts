@@ -50,3 +50,14 @@ export function eventMessage(name: string, amount: number, discordIds: string[])
   const verb = amount > 0 ? (discordIds.length === 1 ? "gets" : "get") : (discordIds.length === 1 ? "loses" : "lose");
   return `🎉 **${title}**: ${who} ${verb} **${amount > 0 ? "+" : ""}${amount} Candy** ${CANDY_EMOJI}`;
 }
+
+/** Candy Island results for Discord: draw order, then who's left over. */
+export function islandMessage(round: number, picked: string[], remaining: string[]): string {
+  const lines = picked.map((id, i) => `${i + 1}. <@${id}>`);
+  return [
+    `🏝️ **CANDY ISLAND: ROUND ${round}**`,
+    ...lines,
+    "",
+    `**Remaining (${remaining.length}):** ${remaining.map((id) => `<@${id}>`).join(", ")}`,
+  ].join("\n");
+}
