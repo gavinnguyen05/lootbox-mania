@@ -205,7 +205,14 @@ export default function TreatTab({ players, neighbors, treats, treatsUsed, setFl
               </div>
               <div className="tt-actions">
                 <button className="btn btn-big tt-knock" disabled={busy || leftFor(selected.id) < 1} onClick={treat}>
-                  {busy ? "Knocking..." : <>🎃 Knock on {neighbor.name}&apos;s door</>}
+                  {busy ? "Knocking..." : (
+                    <>
+                      {neighbor.icon_path
+                        ? <Image src={neighbor.icon_path} alt="" width={32} height={32} className="tt-knock-icon" />
+                        : <span aria-hidden>{neighbor.flag || "🎃"}</span>}
+                      Knock on {neighbor.name}&apos;s door
+                    </>
+                  )}
                 </button>
                 <div className="tt-secondary">
                   <button className="btn" disabled={busy || !hasTreat} onClick={reroll}>Reroll last</button>

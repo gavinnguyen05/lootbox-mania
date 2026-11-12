@@ -240,6 +240,8 @@
 .tt-bonus-add { color: var(--pumpkin); border-color: var(--pumpkin-line); }
 .tt-bonus-note { color: var(--pumpkin); }
 .tt-knock { background: linear-gradient(#ff9d54, #f07a1e); border-color: #b8560e; color: #241200; width: 100%; }
+.tt-knock { display: flex; align-items: center; justify-content: center; gap: 10px; }
+.tt-knock-icon { width: 32px; height: 32px; object-fit: contain; flex: none; }
 .tt-knock:hover:not(:disabled) { background: linear-gradient(#ffad6e, #f5862e); }
 .tt-secondary { display: flex; gap: 8px; }
 .tt-secondary .btn { flex: 1; }
