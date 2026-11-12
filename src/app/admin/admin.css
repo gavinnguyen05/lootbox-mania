@@ -423,10 +423,10 @@
 /* ---------- Candy Island final sequence ----------
    Layers: stage (seats ~36-70) < dim (150) < spotlighted seat (160) < arm/tag rig (170).
    Tune the art here: tag size/position (FS_TAG_*), arm size and where it grips (FS_ARM_*). */
-/* Measured from the art: the tag's top edge at 62% across / 20% down is where the fingertips
-   (96% / 97% of commandant-arm-long.png) grip it. Hand ≈ 30% of the tag's width. */
+/* Measured from the art: the pinch of commandant-arm-hold-long.png (88% across, 3% down)
+   holds the tag's bottom edge at 50% across / 80% down. Hand ≈ a third of the tag's width. */
 .stage { --fs-tag-w: 31cqw; --fs-tag-x: 47cqw; --fs-tag-y: 28cqw;
-         --fs-arm-w: 56cqw; --fs-arm-left: -34.3cqw; --fs-arm-top: -19.4cqw; }
+         --fs-arm-w: 45.9cqw; --fs-arm-left: -24.85cqw; --fs-arm-top: 9.82cqw; }
 .fs-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; padding: 8px 10px; border: 1px dashed var(--line-strong); border-radius: 10px; }
 .fs-controls.running { border-color: #b8560e; background: #1f1209; }
 .fs-start { border-color: #b8560e; color: #ffb27a; }
@@ -438,15 +438,16 @@
 .fs-dim.on { opacity: .6; }
 .stage-seat.spot { z-index: 160 !important; }
 
-/* The rig carries the arm and the tag together. Its position states slide on one transition. */
-.fs-rig { position: absolute; left: var(--fs-tag-x); top: var(--fs-tag-y); z-index: 170; width: 0; height: 0; pointer-events: none;
-          transition: transform .65s cubic-bezier(.3, .7, .3, 1); }
-.fs-rig.at-start { transform: translate(-80cqw, -60cqw); }
-.fs-rig.at-reach { transform: translate(-3cqw, 37cqw); }   /* hand down at the "table" just below the frame */
-.fs-rig.at-lift  { transform: translate(0, 0); }
-.fs-rig.at-lower { transform: translate(-2cqw, 37cqw); }
+/* The rig marks the tag's resting spot (middle of the stage). The tag and arm each slide in and out of it. */
+.fs-rig { position: absolute; left: var(--fs-tag-x); top: var(--fs-tag-y); z-index: 170; width: 0; height: 0; pointer-events: none; }
 .fs-tag { position: absolute; left: calc(var(--fs-tag-w) / -2); top: 0; width: var(--fs-tag-w); transform: translateY(-50%); }
+.fs-tag-move, .fs-arm { transition: transform .65s cubic-bezier(.3, .7, .3, 1); }
 .fs-arm { position: absolute; left: var(--fs-arm-left); top: var(--fs-arm-top); width: var(--fs-arm-w); max-width: none; height: auto; z-index: 3; }
+.fs-rig.at-below .fs-tag-move, .fs-rig.at-below .fs-arm { transform: translateY(45cqw); }   /* under the frame */
+.fs-rig.at-hold .fs-tag-move, .fs-rig.at-hold .fs-arm { transform: none; }                   /* tag carried to the middle */
+.fs-rig.at-release .fs-tag-move { transform: none; }
+.fs-rig.at-release .fs-arm, .fs-rig.at-exit .fs-arm { transform: translateY(70cqw); }       /* arm sinks away */
+.fs-rig.at-exit .fs-tag-move { transform: translateY(45cqw); }                              /* tag drops out */
 .fs-tag-card { position: relative; z-index: 2; transition: transform .16s linear; }
 .fs-tag-card.closed { transform: scaleX(0); }
 .fs-tag-img { display: block; width: 100%; height: auto; }
@@ -457,4 +458,4 @@
   color: #24130a;
 }
 .fs-tag-name-probe { position: absolute; left: 0; top: 0; visibility: hidden; white-space: nowrap; font-family: "Samdan Evil", var(--font); line-height: 1; pointer-events: none; }
-.stage.capturing .fs-rig, .stage.capturing .fs-dim, .stage.capturing .fs-tag-card { transition: none !important; }
+.stage.capturing .fs-tag-move, .stage.capturing .fs-arm, .stage.capturing .fs-dim, .stage.capturing .fs-tag-card { transition: none !important; }

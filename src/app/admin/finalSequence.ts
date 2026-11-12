@@ -28,8 +28,12 @@ export function timingFor(unsafe: number) {
   return { stageHold: 1300, hiddenHold: 500, nameHold: 1500, safeHold: 1500 };
 }
 
-/** Arm/tag rig: where it is. CSS moves it between these with a transition. */
-export type RigPos = "start" | "reach" | "lift" | "lower";
+/**
+ * Arm/tag positions; CSS slides between them.
+ * below: both out of frame under the stage · hold: arm has carried the tag to the middle
+ * release: tag stays, arm sinks back out · exit: tag drops out too.
+ */
+export type RigPos = "below" | "hold" | "release" | "exit";
 
 export interface SequenceScene {
   dim: boolean;               // dark overlay over the stage
@@ -56,7 +60,7 @@ export interface SequenceInput {
 export function validateSequence({ participants, atRisk, safe, nameOf }: SequenceInput): string | null {
   if (atRisk.length === 0) return "Run a Candy Island draw first: its left-over players are the ones at risk.";
   if (atRisk.length !== FINAL_AT_RISK) {
-    return `The latest draw left ${atRisk.length} player${atRisk.length === 1 ? "" : "s"} at risk; the final sequence needs exactly ${FINAL_AT_RISK}.`;
+    return `The latest draw left ${atRisk.length} player${atRisk.length === 1 ? "" : "s"} at risk; the animation needs exactly ${FINAL_AT_RISK}.`;
   }
   const inCeremony = new Set(participants);
   for (const id of atRisk) {
@@ -140,34 +144,33 @@ export function useFinalSequence(getInput: () => SequenceInput, give: (id: strin
         // Re-check against live state before every reveal.
         const now = getInput();
         const unsafe = now.participants.filter((p) => !now.safe.has(p));
-        if (now.atRisk.length !== atRisk.size || now.atRisk.some((p) => !atRisk.has(p))) throw new Error("The at-risk players changed during the sequence. Stopped.");
-        if (now.atRisk.some((p) => now.safe.has(p))) throw new Error("An at-risk player was given a marshmallow during the sequence. Stopped.");
-        if (!now.participants.includes(id)) throw new Error(`${now.nameOf(id)} left the ceremony during the sequence. Stopped.`);
+        if (now.atRisk.length !== atRisk.size || now.atRisk.some((p) => !atRisk.has(p))) throw new Error("The at-risk players changed during the animation. Stopped.");
+        if (now.atRisk.some((p) => now.safe.has(p))) throw new Error("An at-risk player was given a marshmallow during the animation. Stopped.");
+        if (!now.participants.includes(id)) throw new Error(`${now.nameOf(id)} left the ceremony during the animation. Stopped.`);
         if (now.safe.has(id)) continue; // already safe somehow: never reveal twice
 
         const t = timingFor(unsafe.length);
         await wait(t.stageHold, run.signal);
 
-        // Dim, then the arm reaches down for a tag.
-        setScene({ ...IDLE, dim: true, rig: "start", camperId: id });
+        // Dim, then the arm brings the hidden tag up from below into the middle.
+        setScene({ ...IDLE, dim: true, rig: "below", camperId: id });
         await wait(DIM_FADE_MS, run.signal);
-        setScene((s) => ({ ...s, rig: "reach" }));
-        await wait(RIG_MOVE_MS, run.signal);
+        setScene((s) => ({ ...s, rig: "hold" }));
+        await wait(RIG_MOVE_MS + 250, run.signal);
 
-        // Lift the hidden tag and hold it.
-        setScene((s) => ({ ...s, rig: "lift" }));
+        // The arm lets go and sinks back out of frame; the tag stays put.
+        setScene((s) => ({ ...s, rig: "release" }));
         await wait(RIG_MOVE_MS + t.hiddenHold, run.signal);
 
-        // Flip: squash to nothing, swap to the name side, open back up.
+        // The tag flips on its own: squash to nothing, swap to the name side, open back up.
         setScene((s) => ({ ...s, flipClosed: true }));
         await wait(FLIP_MS / 2, run.signal);
         setScene((s) => ({ ...s, side: "front", flipClosed: false }));
         await wait(FLIP_MS / 2 + t.nameHold, run.signal);
 
-        // Lower the tag, arm goes back out.
-        setScene((s) => ({ ...s, rig: "lower" }));
+        // The tag drops back out of frame.
+        setScene((s) => ({ ...s, rig: "exit" }));
         await wait(RIG_MOVE_MS, run.signal);
-        setScene((s) => ({ ...s, rig: "start" }));
 
         // Marshmallow: the stage's own toss. Their seat sits above the dim while it lands.
         setScene((s) => ({ ...s, spotlightId: id }));
@@ -185,7 +188,7 @@ export function useFinalSequence(getInput: () => SequenceInput, give: (id: strin
       setStatus("done"); // only the at-risk campers are left unsafe
     } catch (e) {
       if (e instanceof Cancelled) return; // stop() already cleaned up
-      stop(e instanceof Error ? e.message : "The final sequence stopped unexpectedly.");
+      stop(e instanceof Error ? e.message : "The animation stopped unexpectedly.");
     }
   }, [getInput, give, stop]);
 

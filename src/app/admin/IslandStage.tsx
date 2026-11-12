@@ -203,19 +203,19 @@ export default function IslandStage({ players, outIds, atRiskIds, safeIds, lates
       <div className={`fs-controls${running ? " running" : ""}`}>
         {running ? (
           <>
-            <span className="fs-running" role="status">● FINAL SEQUENCE RUNNING</span>
-            <button className="btn btn-sm btn-danger" onClick={seq.cancel}>Cancel sequence</button>
+            <span className="fs-running" role="status">● ANIMATION RUNNING</span>
+            <button className="btn btn-sm btn-danger" onClick={seq.cancel}>Stop animation</button>
           </>
         ) : (
           <>
-            <button className="btn btn-sm fs-start" disabled={notReady !== null} onClick={seq.start}>Start final sequence</button>
+            <button className="btn btn-sm fs-start" disabled={notReady !== null} onClick={seq.start}>▶ Play animation</button>
             <span className="muted small">
-              {notReady ?? `Reveals the ${live.current.participants.filter((id) => !safe.has(id)).length - atRiskIds.length} remaining safe campers automatically, then stops on the final ${atRiskIds.length}.`}
+              {notReady ?? `Reveals the ${live.current.participants.filter((id) => !safe.has(id)).length - atRiskIds.length} safe campers still waiting, one tag at a time, then stops on the final ${atRiskIds.length}. Start it whenever you like, even from the beginning.`}
             </span>
           </>
         )}
-        {seq.error && <p className="error fs-error" role="alert">Final sequence stopped: {seq.error}</p>}
-        {seq.status === "done" && <span className="fs-done">Final sequence finished. Final {atRiskIds.length} at risk.</span>}
+        {seq.error && <p className="error fs-error" role="alert">Animation stopped: {seq.error}</p>}
+        {seq.status === "done" && <span className="fs-done">Animation finished. Final {atRiskIds.length} at risk.</span>}
       </div>
       <p className="muted small stage-hint">
         Click someone to toss them a marshmallow (click again to take it back). Players out from earlier rounds are greyed.
