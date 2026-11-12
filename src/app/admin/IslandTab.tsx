@@ -164,7 +164,7 @@ export default function IslandTab({ players, island, setFlash }: {
         </section>
       </div>
 
-      <IslandStage players={players} outIds={outIds} safeIds={latest?.picked ?? []} latestRound={latest?.round ?? null} />
+      <IslandStage players={players} outIds={outIds} safeIds={latest?.picked ?? []} latestRound={latest?.round ?? null} toRemain={n} />
     </div>
   );
 }

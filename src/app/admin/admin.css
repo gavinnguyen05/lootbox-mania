@@ -345,6 +345,11 @@
 .isl-out-tag { color: var(--muted); border-color: var(--line-strong); }
 
 /* ---------- Candy Island stage ---------- */
+@font-face {
+  font-family: "Samdan Evil";
+  src: url("/fonts/SamdanEvil.ttf") format("truetype");
+  font-display: swap;
+}
 .stage-wrap { display: grid; gap: 6px; }
 .stage-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
 .stage-bar h3 { font-size: 18px; font-weight: 700; }
@@ -356,20 +361,47 @@
 .stage-seat {
   position: absolute; transform: translate(-50%, -100%); transform-origin: 50% 100%;
   padding: 0; border: 0; background: none; cursor: pointer; display: grid; justify-items: center;
-  transition: transform .15s ease, opacity .15s ease, filter .15s ease;
+  transition: transform .15s ease;
 }
-.stage-seat .avatar { width: 100%; height: auto; aspect-ratio: 1; border: .3cqw solid #fff; box-shadow: 0 .4cqw .9cqw rgba(0, 0, 0, .45); }
+.stage-seat[aria-disabled="true"] { cursor: default; }
+.stage-seat .avatar { width: 100%; height: auto; aspect-ratio: 1; box-shadow: 0 .4cqw .9cqw rgba(0, 0, 0, .45); }
 .stage-seat .avatar-fallback { font-size: 3cqw; }
 .stage-name {
   max-width: 160%; margin-bottom: .35cqw; padding: .1cqw .6cqw; border-radius: .5cqw;
   background: rgba(16, 14, 20, .82); color: #fff; font-size: 1.15cqw; font-weight: 700; line-height: 1.35;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.stage-seat.grey { filter: grayscale(1) brightness(.6); opacity: .6; }
-.stage-seat.focus { transform: translate(-50%, -100%) scale(1.3); filter: none; opacity: 1; }
-.stage-seat.focus.grey { filter: grayscale(1) brightness(.8); }
-.stage-seat.faded { opacity: .08; }
+/* Grey the person, not their marshmallow. */
+.stage-seat .avatar, .stage-seat .stage-name { transition: filter .2s ease, opacity .2s ease; }
+.stage-seat.grey .avatar, .stage-seat.grey .stage-name { filter: grayscale(1) brightness(.6); opacity: .6; }
+.stage-seat.focus { transform: translate(-50%, -100%) scale(1.3); }
+.stage-seat.focus.grey .avatar, .stage-seat.focus.grey .stage-name { filter: grayscale(1) brightness(.85); opacity: .85; }
 .stage-seat:focus-visible { outline: none; }
 .stage-seat:focus-visible .avatar { outline: .3cqw solid var(--purple); outline-offset: .2cqw; }
-.stage.capturing .stage-seat { transition: none !important; }
-@media (prefers-reduced-motion: reduce) { .stage-seat { transition: none; } }
+
+/* Marshmallow: sits beside the avatar; "toss" flies it in from the campfire on an arc. */
+.stage-mallow { position: absolute; right: -38%; bottom: -4%; width: 48%; height: auto; transform: rotate(-12deg); filter: drop-shadow(0 .3cqw .4cqw rgba(0, 0, 0, .45)); pointer-events: none; }
+.stage-mallow.toss { animation: mallow-toss .7s cubic-bezier(.3, .7, .4, 1) var(--delay, 0ms) both; }
+@keyframes mallow-toss {
+  0%   { transform: translate(var(--dx), var(--dy)) rotate(-300deg) scale(.7); opacity: 0; }
+  8%   { opacity: 1; }
+  50%  { transform: translate(calc(var(--dx) * .45), calc(var(--dy) * .45 - 9cqw)) rotate(-140deg) scale(1.05); }
+  85%  { transform: translate(0, -.8cqw) rotate(-20deg) scale(1); }
+  100% { transform: rotate(-12deg); opacity: 1; }
+}
+
+/* "N marshmallows remain" overlay, near the target. */
+.stage-countdown {
+  position: absolute; left: 50%; top: 4%; transform: translateX(-50%); z-index: 200; margin: 0; pointer-events: none;
+  font-family: "Samdan Evil", var(--font); font-size: 5.2cqw; line-height: 1; white-space: nowrap; letter-spacing: .1cqw;
+  color: #fff6e0; text-shadow: 0 .35cqw 0 #3b0f0a, 0 0 1.4cqw rgba(255, 140, 40, .75), 0 0 .3cqw #000;
+  animation: countdown-in .45s ease-out both;
+}
+@keyframes countdown-in { from { opacity: 0; transform: translateX(-50%) scale(.85); } to { opacity: 1; transform: translateX(-50%) scale(1); } }
+
+.stage.capturing .stage-seat, .stage.capturing .stage-seat .avatar, .stage.capturing .stage-seat .stage-name { transition: none !important; }
+.stage.capturing .stage-mallow, .stage.capturing .stage-countdown { animation: none !important; }
+@media (prefers-reduced-motion: reduce) {
+  .stage-seat, .stage-seat .avatar, .stage-seat .stage-name { transition: none; }
+  .stage-mallow.toss, .stage-countdown { animation: none; }
+}
