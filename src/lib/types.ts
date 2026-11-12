@@ -72,6 +72,8 @@ export interface TreatResult {
   emoji_code: string;
   candy: number;
   message: string;
+  /** Image to post alongside this outcome's message, if any (e.g. /assets/orangebar.png). */
+  attach_image: string | null;
   total: number;
   treats_left: number;
   used_bonus: boolean;

@@ -49,6 +49,24 @@ export default function IslandStage({ players, outIds, safeIds, latestRound, toR
   toRemain: number;
 }) {
   const stageRef = useRef<HTMLDivElement>(null);
+  const fsRef = useRef<HTMLDivElement>(null);
+  const [fullscreen, setFullscreen] = useState(false);
+
+  // Track full screen (it can also be left with Esc). Listener removed on unmount.
+  useEffect(() => {
+    const onChange = () => setFullscreen(document.fullscreenElement === fsRef.current);
+    document.addEventListener("fullscreenchange", onChange);
+    return () => document.removeEventListener("fullscreenchange", onChange);
+  }, []);
+
+  async function toggleFullscreen() {
+    try {
+      if (document.fullscreenElement) await document.exitFullscreen();
+      else await fsRef.current?.requestFullscreen();
+    } catch {
+      // Browser refused (e.g. not allowed in this frame): nothing to do.
+    }
+  }
   const [order, setOrder] = useState<string[]>([]);       // player ids, one per stump
   const [safe, setSafe] = useState<Set<string>>(new Set()); // got a marshmallow
   const [tossing, setTossing] = useState<Map<string, number>>(new Map()); // marshmallow in the air → delay (ms)
@@ -112,7 +130,7 @@ export default function IslandStage({ players, outIds, safeIds, latestRound, toR
     await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
     try {
       if (kind === "export") {
-        await downloadElementAsPng(stageRef.current, "candy-island.png", BG.width);
+        await downloadElementAsPng(stageRef.current, "candy-island.png", BG.width, BG.height);
         setStatus("");
       } else {
         await copyElementAsImage(stageRef.current);
@@ -130,6 +148,7 @@ export default function IslandStage({ players, outIds, safeIds, latestRound, toR
       <div className="stage-bar">
         <h3 id="stage-h">Campfire stage</h3>
         <div className="stage-buttons">
+          <button className="btn btn-sm" onClick={toggleFullscreen}>⛶ Full screen</button>
           <button className="btn btn-sm" onClick={() => setOrder(shuffled(active.map((p) => p.id)))}>Shuffle seats</button>
           {latestRound !== null && safeIds.length > 0 && (
             <button className="btn btn-sm" onClick={() => give(safeIds, 120)}>Marshmallows to round {latestRound} safe</button>
@@ -149,6 +168,10 @@ export default function IslandStage({ players, outIds, safeIds, latestRound, toR
         {unseated > 0 && <span className="error"> {unseated} player{unseated === 1 ? "" : "s"} didn&apos;t fit: there are only 16 stumps.</span>}
       </p>
 
+      <div ref={fsRef} className={`stage-fs${fullscreen ? " is-full" : ""}`}>
+      {fullscreen && (
+        <button className="stage-fs-exit" onClick={toggleFullscreen} aria-label="Exit full screen">✕ Exit full screen (Esc)</button>
+      )}
       <div ref={stageRef} className={`stage${capturing ? " capturing" : ""}`} onMouseLeave={() => setHover(null)}>
         <Image src={BG.src} alt="" width={BG.width} height={BG.height} className="stage-bg" priority />
         {seated.map((id) => {
@@ -186,6 +209,7 @@ export default function IslandStage({ players, outIds, safeIds, latestRound, toR
             {left === 1 ? "1 marshmallow remains" : `${left} marshmallows remain`}
           </p>
         )}
+      </div>
       </div>
     </section>
   );

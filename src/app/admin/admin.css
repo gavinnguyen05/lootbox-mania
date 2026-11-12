@@ -249,6 +249,8 @@
 .tt-line { margin-top: 2px; overflow-wrap: anywhere; }
 @media (prefers-reduced-motion: reduce) { .tt-result { animation: none; } }
 .tt-copy { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: start; }
+.tt-copy-buttons { display: grid; gap: 6px; }
+.tt-attach { width: 100%; max-width: 480px; height: auto; border-radius: 6px; }
 
 /* Discord-look leaderboard (Discord's dark theme colors). */
 .tt-board { display: grid; gap: 8px; min-width: 0; }
@@ -389,6 +391,16 @@
   85%  { transform: translate(0, -.8cqw) rotate(-20deg) scale(1); }
   100% { transform: rotate(-12deg); opacity: 1; }
 }
+
+/* Full screen: the scene as big as the screen allows, letterboxed on black. */
+.stage-fs.is-full { display: flex; align-items: center; justify-content: center; width: 100vw; height: 100vh; background: #000; }
+.stage-fs.is-full .stage { width: min(100vw, calc(100vh * 1672 / 941)); border-radius: 0; }
+.stage-fs-exit {
+  position: fixed; top: 12px; right: 12px; z-index: 300; padding: 6px 12px; border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, .25); background: rgba(0, 0, 0, .55); color: #fff;
+  font-family: var(--ui); font-size: 14px; cursor: pointer; opacity: .55; transition: opacity .15s ease;
+}
+.stage-fs-exit:hover, .stage-fs-exit:focus-visible { opacity: 1; }
 
 /* "N marshmallows remain" overlay, near the target. */
 .stage-countdown {

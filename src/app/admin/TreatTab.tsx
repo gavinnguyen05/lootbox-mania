@@ -13,6 +13,7 @@ import { displayName } from "@/lib/names";
 import { leaderboardText, treatMessagePlain } from "@/lib/candy";
 import Avatar from "@/components/Avatar";
 import CandyBoard from "./CandyBoard";
+import { copyImageFile } from "@/lib/copy-image";
 import { grantTreat, rerollTreat, setCandy, trickOrTreat, undoTreat, type ActionResult, type TreatActionResult } from "./actions";
 
 const TREATS_PER_WINDOW = 1;
@@ -104,6 +105,18 @@ export default function TreatTab({ players, neighbors, treats, treatsUsed, setFl
       return;
     }
     run(() => setCandy(p.id, amount), () => setChange({ playerId: p.id, from: p.candy, to: amount }));
+  }
+
+  // Some outcomes come with an image to post too (e.g. Mousey's 4%).
+  const [imageCopied, setImageCopied] = useState<"" | "done" | "error">("");
+  useEffect(() => setImageCopied(""), [result]);
+  async function copyAttached(path: string) {
+    try {
+      await copyImageFile(path);
+      setImageCopied("done");
+    } catch {
+      setImageCopied("error");
+    }
   }
 
   async function copyMessage(text: string) {
@@ -216,12 +229,24 @@ export default function TreatTab({ players, neighbors, treats, treatsUsed, setFl
                 </div>
               )}
               {shown?.discordText && (
+                <>
                 <div className="tt-copy">
                   <textarea className="input discord-text" readOnly aria-label="Discord message" rows={2} value={shown.discordText} />
-                  <button className="btn btn-sm btn-primary" onClick={() => copyMessage(shown.discordText ?? "")}>
-                    {copied ? "Copied" : "Copy message"}
-                  </button>
+                  <div className="tt-copy-buttons">
+                    <button className="btn btn-sm btn-primary" onClick={() => copyMessage(shown.discordText ?? "")}>
+                      {copied ? "Copied" : "Copy message"}
+                    </button>
+                    {shown.result?.attach_image && (
+                      <button className="btn btn-sm btn-orange" onClick={() => copyAttached(shown.result!.attach_image!)}>
+                        {imageCopied === "done" ? "Image copied" : imageCopied === "error" ? "Copy failed" : "Copy image"}
+                      </button>
+                    )}
+                  </div>
                 </div>
+                {shown.result?.attach_image && (
+                  <Image src={shown.result.attach_image} alt="Image to post with this message" width={480} height={60} className="tt-attach" />
+                )}
+                </>
               )}
             </section>
           )}
