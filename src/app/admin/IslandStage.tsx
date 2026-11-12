@@ -87,7 +87,13 @@ export default function IslandStage({ players, outIds, safeIds, latestRound, toR
     // Each marshmallow waits at the campfire (invisible) for its turn, then flies.
     setTossing((t) => { const n = new Map(t); fresh.forEach((id, i) => n.set(id, i * stagger)); return n; });
     const total = (fresh.length - 1) * stagger + 750;
-    setTimeout(() => setTossing((t) => { const n = new Map(t); fresh.forEach((id) => n.delete(id)); return n; }), total);
+    setTimeout(() => {
+      setTossing((t) => { const n = new Map(t); fresh.forEach((id) => n.delete(id)); return n; });
+      // Toss landed: let go of the player you clicked (they're greyed now, so no hover focus).
+      setHover((h) => (h && fresh.includes(h) ? null : h));
+      const el = document.activeElement as HTMLElement | null;
+      if (el?.classList.contains("stage-seat")) el.blur();
+    }, total);
   }
 
   function toggle(id: string) {
@@ -153,11 +159,15 @@ export default function IslandStage({ players, outIds, safeIds, latestRound, toR
           // Toss path, from the campfire to this seat, in container units (cqw).
           const dx = FIRE[0] - x;
           const dy = (FIRE[1] - y) * ASPECT;
-          const cls = ["stage-seat", (out || isSafe) && "grey", hover === id && "focus"].filter(Boolean).join(" ");
+          const grey = out || isSafe;
+          // Greyed players don't get the hover focus, except while their marshmallow is in the air.
+          const focused = hover === id && (!grey || tossing.has(id));
+          const cls = ["stage-seat", grey && "grey", focused && "focus"].filter(Boolean).join(" ");
           return (
             <button key={id} type="button" className={cls}
-              style={{ left: `${x}%`, top: `${y}%`, width: `${AVATAR_W}%`, zIndex: hover === id ? 100 : Math.round(y) } as React.CSSProperties}
-              onMouseEnter={() => !capturing && setHover(id)} onFocus={() => setHover(id)} onBlur={() => setHover(null)}
+              style={{ left: `${x}%`, top: `${y}%`, width: `${AVATAR_W}%`, zIndex: focused ? 100 : Math.round(y) } as React.CSSProperties}
+              onMouseEnter={() => !capturing && setHover(id)} onFocus={() => setHover(id)}
+              onMouseLeave={() => setHover((h) => (h === id ? null : h))} onBlur={() => setHover((h) => (h === id ? null : h))}
               onClick={() => toggle(id)} aria-pressed={isSafe} aria-disabled={out}
               aria-label={`${displayName(p)}${out ? ", out" : isSafe ? ", safe" : ""}${out ? "" : isSafe ? ". Click to take back the marshmallow" : ". Click to toss a marshmallow"}`}>
               <span className="stage-name">{displayName(p)}</span>
