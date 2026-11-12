@@ -10,6 +10,7 @@ import type { AdminPlayer, IslandState } from "@/lib/types";
 import { displayName } from "@/lib/names";
 import { islandMessage } from "@/lib/candy";
 import Avatar from "@/components/Avatar";
+import IslandStage from "./IslandStage";
 import { islandReset, islandRun, islandUndo, type ActionResult, type IslandActionResult } from "./actions";
 
 export default function IslandTab({ players, island, setFlash }: {
@@ -32,6 +33,7 @@ export default function IslandTab({ players, island, setFlash }: {
     return m;
   }, [island.rounds]);
   const onIsland = active.filter((p) => outRound[p.id] === undefined);
+  const outIds = useMemo(() => new Set(Object.keys(outRound)), [outRound]);
   const latest = island.rounds[island.rounds.length - 1];
   const n = Number(remaining);
   const nOk = Number.isInteger(n) && n >= 1 && n < onIsland.length;
@@ -161,6 +163,8 @@ export default function IslandTab({ players, island, setFlash }: {
           </ul>
         </section>
       </div>
+
+      <IslandStage players={players} outIds={outIds} safeIds={latest?.picked ?? []} latestRound={latest?.round ?? null} />
     </div>
   );
 }

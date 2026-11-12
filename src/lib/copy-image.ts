@@ -23,3 +23,22 @@ export async function copyElementAsImage(el: HTMLElement): Promise<void> {
   });
   await navigator.clipboard.write([new ClipboardItem({ "image/png": png })]);
 }
+
+/**
+ * Downloads an element as a PNG at a set output width (e.g. the background
+ * image's native 1672px), whatever size it's shown at on screen.
+ */
+export async function downloadElementAsPng(el: HTMLElement, fileName: string, outputWidth: number): Promise<void> {
+  const blob = await toBlob(el, {
+    pixelRatio: Math.max(1, outputWidth / el.offsetWidth),
+    cacheBust: false,
+    includeQueryParams: true, // see copyElementAsImage
+  });
+  if (!blob) throw new Error("Couldn't draw the image.");
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = fileName;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 10_000);
+}
