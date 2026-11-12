@@ -33,7 +33,14 @@ export default function IslandTab({ players, island, setFlash }: {
     return m;
   }, [island.rounds]);
   const onIsland = active.filter((p) => outRound[p.id] === undefined);
-  const outIds = useMemo(() => new Set(Object.keys(outRound)), [outRound]);
+  const latestRound = island.rounds[island.rounds.length - 1];
+  // On the stage: earlier rounds' left-overs are out (greyed); the latest draw's are at risk this ceremony.
+  const stageOutIds = useMemo(
+    () => new Set(island.rounds.slice(0, -1).flatMap((r) => r.remaining)),
+    [island.rounds],
+  );
+  // Locked while the stage's final sequence runs, so nothing can change the round underneath it.
+  const [locked, setLocked] = useState(false);
   const latest = island.rounds[island.rounds.length - 1];
   const n = Number(remaining);
   const nOk = Number.isInteger(n) && n >= 1 && n < onIsland.length;
@@ -78,8 +85,8 @@ export default function IslandTab({ players, island, setFlash }: {
           <p className="isl-count"><strong>{onIsland.length}</strong> of {active.length} still on the island</p>
         </div>
         <div className="isl-top-actions">
-          <button className="btn btn-danger" disabled={busy || !latest} onClick={undo}>Undo last round</button>
-          <button className="btn" disabled={busy || island.rounds.length === 0} onClick={reset}>Start over</button>
+          <button className="btn btn-danger" disabled={busy || locked || !latest} onClick={undo}>Undo last round</button>
+          <button className="btn" disabled={busy || locked || island.rounds.length === 0} onClick={reset}>Start over</button>
         </div>
       </div>
 
@@ -93,7 +100,7 @@ export default function IslandTab({ players, island, setFlash }: {
                 <input id="isl-remaining" className="input isl-number" type="number" inputMode="numeric" min={1} max={Math.max(1, onIsland.length - 1)}
                   value={remaining} onChange={(e) => setRemaining(e.target.value)} />
               </div>
-              <button className="btn btn-big isl-draw" disabled={busy || !nOk} onClick={draw}>
+              <button className="btn btn-big isl-draw" disabled={busy || locked || !nOk} onClick={draw}>
                 {busy ? "Drawing..." : "🌴 Run draw"}
               </button>
             </div>
@@ -164,7 +171,8 @@ export default function IslandTab({ players, island, setFlash }: {
         </section>
       </div>
 
-      <IslandStage players={players} outIds={outIds} safeIds={latest?.picked ?? []} latestRound={latest?.round ?? null} toRemain={n} />
+      <IslandStage players={players} outIds={stageOutIds} atRiskIds={latestRound?.remaining ?? []}
+        safeIds={latest?.picked ?? []} latestRound={latest?.round ?? null} toRemain={n} onLockChange={setLocked} />
     </div>
   );
 }

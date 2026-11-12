@@ -1,0 +1,196 @@
+"use client";
+// Candy Island final suspense sequence.
+//
+// Once only a few campers are still waiting for a marshmallow, this reveals the
+// remaining SAFE campers automatically, one tag at a time, and stops with only
+// the predetermined at-risk campers (the latest draw's left-overs) unrevealed.
+//
+// It never decides who is eliminated: that was fixed by the draw. It only
+// shuffles the order the safe campers are revealed in. It reuses the stage's
+// own marshmallow toss (give) and safe state; it has no player state of its own.
+
+import { useCallback, useEffect, useRef, useState } from "react";
+
+/** The sequence ends with exactly this many campers left unsafe. */
+export const FINAL_AT_RISK = 2;
+/** It can start once this many (or fewer) campers are unsafe... and at least FINAL_AT_RISK + 1. */
+export const MIN_UNSAFE_TO_START = FINAL_AT_RISK + 1;
+
+export const DIM_FADE_MS = 300;
+export const RIG_MOVE_MS = 650; // arm/tag moving between positions (matches the CSS transition)
+export const FLIP_MS = 320;     // full flip; each half is FLIP_MS / 2 (matches the CSS transition)
+export const TOSS_MS = 750;     // the stage's existing marshmallow toss
+
+/** Slower as fewer campers remain. `unsafe` = campers still waiting, before this reveal. */
+export function timingFor(unsafe: number) {
+  if (unsafe <= 3) return { stageHold: 2700, hiddenHold: 1250, nameHold: 2300, safeHold: 2000 };
+  if (unsafe === 4) return { stageHold: 2000, hiddenHold: 900, nameHold: 2000, safeHold: 1800 };
+  return { stageHold: 1300, hiddenHold: 500, nameHold: 1500, safeHold: 1500 };
+}
+
+/** Arm/tag rig: where it is. CSS moves it between these with a transition. */
+export type RigPos = "start" | "reach" | "lift" | "lower";
+
+export interface SequenceScene {
+  dim: boolean;               // dark overlay over the stage
+  rig: RigPos | null;         // null = arm/tag not shown
+  camperId: string | null;    // whose tag it is
+  side: "back" | "front";     // tag-bottom.png (hidden) or tag-top.png (name)
+  flipClosed: boolean;        // mid-flip: tag squashed to zero width
+  spotlightId: string | null; // camper drawn above the dim while their marshmallow lands
+}
+
+const IDLE: SequenceScene = { dim: false, rig: null, camperId: null, side: "back", flipClosed: false, spotlightId: null };
+
+export interface SequenceInput {
+  /** Campers in this ceremony: active, on a stump, not out in an earlier round. */
+  participants: string[];
+  /** Predetermined at-risk campers (the latest draw's left-overs). */
+  atRisk: string[];
+  /** Who has a marshmallow right now (the stage's real state). */
+  safe: Set<string>;
+  nameOf: (id: string) => string;
+}
+
+/** Why the sequence can't start right now, or null if it can. */
+export function validateSequence({ participants, atRisk, safe, nameOf }: SequenceInput): string | null {
+  if (atRisk.length === 0) return "Run a Candy Island draw first: its left-over players are the ones at risk.";
+  if (atRisk.length !== FINAL_AT_RISK) {
+    return `The latest draw left ${atRisk.length} player${atRisk.length === 1 ? "" : "s"} at risk; the final sequence needs exactly ${FINAL_AT_RISK}.`;
+  }
+  const inCeremony = new Set(participants);
+  for (const id of atRisk) {
+    if (!inCeremony.has(id)) return `${nameOf(id)} is at risk but isn't on a stump in this ceremony (inactive, removed, or out in an earlier round).`;
+    if (safe.has(id)) return `${nameOf(id)} is predetermined to be at risk but already has a marshmallow. Take it back first.`;
+  }
+  const unsafe = participants.filter((id) => !safe.has(id));
+  if (unsafe.length < MIN_UNSAFE_TO_START) {
+    return `Needs at least ${MIN_UNSAFE_TO_START} campers still waiting for a marshmallow (now ${unsafe.length}).`;
+  }
+  return null;
+}
+
+class Cancelled extends Error {}
+
+/** A wait that ends early (and stops the run) when the sequence is cancelled. */
+function wait(ms: number, signal: AbortSignal): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (signal.aborted) return reject(new Cancelled());
+    const t = setTimeout(() => { signal.removeEventListener("abort", onAbort); resolve(); }, ms);
+    const onAbort = () => { clearTimeout(t); reject(new Cancelled()); };
+    signal.addEventListener("abort", onAbort, { once: true });
+  });
+}
+
+function shuffled<T>(list: T[]): T[] {
+  const a = [...list];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+export type SequenceStatus = "idle" | "running" | "done";
+
+/**
+ * Runs the sequence. `getInput` reads the stage's CURRENT state each step (not a
+ * stale copy), and `give` is the stage's own marshmallow toss.
+ */
+export function useFinalSequence(getInput: () => SequenceInput, give: (id: string) => void) {
+  const [status, setStatus] = useState<SequenceStatus>("idle");
+  const [scene, setScene] = useState<SequenceScene>(IDLE);
+  const [error, setError] = useState<string | null>(null);
+  const controller = useRef<AbortController | null>(null);
+
+  const stop = useCallback((message?: string) => {
+    controller.current?.abort();
+    controller.current = null;
+    setScene(IDLE);
+    setStatus("idle");
+    if (message) {
+      setError(message);
+      console.error("[final sequence]", message);
+    }
+  }, []);
+
+  // Leaving the tab/page mid-sequence: cancel every pending step.
+  useEffect(() => () => controller.current?.abort(), []);
+
+  const start = useCallback(async () => {
+    if (controller.current) return; // already running: ignore double clicks
+    const first = getInput();
+    const problem = validateSequence(first);
+    if (problem) {
+      setError(problem);
+      console.error("[final sequence]", problem);
+      return;
+    }
+    const run = new AbortController();
+    controller.current = run;
+    setError(null);
+    setStatus("running");
+
+    const atRisk = new Set(first.atRisk);
+    // Randomize ONLY the order of the safe campers. The at-risk ones are never in this list.
+    const reveals = shuffled(first.participants.filter((id) => !first.safe.has(id) && !atRisk.has(id)));
+
+    try {
+      for (const id of reveals) {
+        // Re-check against live state before every reveal.
+        const now = getInput();
+        const unsafe = now.participants.filter((p) => !now.safe.has(p));
+        if (now.atRisk.length !== atRisk.size || now.atRisk.some((p) => !atRisk.has(p))) throw new Error("The at-risk players changed during the sequence. Stopped.");
+        if (now.atRisk.some((p) => now.safe.has(p))) throw new Error("An at-risk player was given a marshmallow during the sequence. Stopped.");
+        if (!now.participants.includes(id)) throw new Error(`${now.nameOf(id)} left the ceremony during the sequence. Stopped.`);
+        if (now.safe.has(id)) continue; // already safe somehow: never reveal twice
+
+        const t = timingFor(unsafe.length);
+        await wait(t.stageHold, run.signal);
+
+        // Dim, then the arm reaches down for a tag.
+        setScene({ ...IDLE, dim: true, rig: "start", camperId: id });
+        await wait(DIM_FADE_MS, run.signal);
+        setScene((s) => ({ ...s, rig: "reach" }));
+        await wait(RIG_MOVE_MS, run.signal);
+
+        // Lift the hidden tag and hold it.
+        setScene((s) => ({ ...s, rig: "lift" }));
+        await wait(RIG_MOVE_MS + t.hiddenHold, run.signal);
+
+        // Flip: squash to nothing, swap to the name side, open back up.
+        setScene((s) => ({ ...s, flipClosed: true }));
+        await wait(FLIP_MS / 2, run.signal);
+        setScene((s) => ({ ...s, side: "front", flipClosed: false }));
+        await wait(FLIP_MS / 2 + t.nameHold, run.signal);
+
+        // Lower the tag, arm goes back out.
+        setScene((s) => ({ ...s, rig: "lower" }));
+        await wait(RIG_MOVE_MS, run.signal);
+        setScene((s) => ({ ...s, rig: "start" }));
+
+        // Marshmallow: the stage's own toss. Their seat sits above the dim while it lands.
+        setScene((s) => ({ ...s, spotlightId: id }));
+        give(id);
+        await wait(TOSS_MS + 150, run.signal);
+
+        // Lights back up, hold the new scene.
+        setScene((s) => ({ ...s, dim: false, rig: null }));
+        await wait(DIM_FADE_MS, run.signal);
+        setScene(IDLE);
+        await wait(t.safeHold, run.signal);
+      }
+      controller.current = null;
+      setScene(IDLE);
+      setStatus("done"); // only the at-risk campers are left unsafe
+    } catch (e) {
+      if (e instanceof Cancelled) return; // stop() already cleaned up
+      stop(e instanceof Error ? e.message : "The final sequence stopped unexpectedly.");
+    }
+  }, [getInput, give, stop]);
+
+  const cancel = useCallback(() => stop(), [stop]);
+  const clear = useCallback(() => { stop(); setError(null); }, [stop]);
+
+  return { status, scene, error, start, cancel, clear, setError };
+}

@@ -7,12 +7,14 @@
 //   down the marshmallows left.
 // - Hover brings an avatar to the front. Export saves the scene as a PNG.
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import type { AdminPlayer } from "@/lib/types";
 import { displayName } from "@/lib/names";
 import { copyElementAsImage, downloadElementAsPng } from "@/lib/copy-image";
 import Avatar from "@/components/Avatar";
+import FinalSequenceOverlay from "./FinalSequenceOverlay";
+import { useFinalSequence, validateSequence, type SequenceInput } from "./finalSequence";
 
 const BG = { src: "/assets/stumps.png", width: 1672, height: 941 };
 const MARSHMALLOW = "/assets/marshmallow.png";
@@ -38,15 +40,19 @@ function shuffled<T>(list: T[]): T[] {
   return a;
 }
 
-export default function IslandStage({ players, outIds, safeIds, latestRound, toRemain }: {
+export default function IslandStage({ players, outIds, atRiskIds, safeIds, latestRound, toRemain, onLockChange }: {
   players: AdminPlayer[];
-  /** Out in an earlier round: greyed automatically, no marshmallow. */
+  /** Out in an EARLIER round: greyed automatically, no marshmallow. */
   outIds: Set<string>;
+  /** Predetermined at risk this round (the latest draw's left-overs). Not greyed: they wait to the end. */
+  atRiskIds: string[];
   /** Drawn (safe) in the latest round, for the quick "give all" button. */
   safeIds: string[];
   latestRound: number | null;
-  /** "How many should remain" from the draw box; drives the countdown. */
+  /** "How many should remain" from the draw box; drives the countdown before any draw. */
   toRemain: number;
+  /** Tells the tab to lock round controls (draw, undo, start over) while the final sequence runs. */
+  onLockChange: (locked: boolean) => void;
 }) {
   const stageRef = useRef<HTMLDivElement>(null);
   const fsRef = useRef<HTMLDivElement>(null);
@@ -91,12 +97,14 @@ export default function IslandStage({ players, outIds, safeIds, latestRound, toR
   const unseated = order.length - seated.length;
   const seatOf = (id: string) => STUMPS[seated.indexOf(id)];
 
-  // Marshmallow countdown: everyone still on the island except the ones who'll remain gets one.
+  // In this ceremony: everyone still on the island (not out in an earlier round), including the at-risk ones.
   const onIsland = active.filter((p) => !outIds.has(p.id));
+  // Marshmallow countdown. After a draw, everyone but its left-overs gets one; before any draw, use the number box.
+  const keep = atRiskIds.length > 0 ? atRiskIds.length : toRemain;
   const given = onIsland.filter((p) => safe.has(p.id)).length;
-  const toGive = onIsland.length - toRemain;
+  const toGive = onIsland.length - keep;
   const left = toGive - given;
-  const showCountdown = Number.isInteger(toRemain) && toRemain >= 1 && toGive > 0 && left >= 1 && left <= COUNTDOWN_FROM;
+  const showCountdown = Number.isInteger(keep) && keep >= 1 && toGive > 0 && left >= 1 && left <= COUNTDOWN_FROM;
 
   function give(ids: string[], stagger = 0) {
     const fresh = ids.filter((id) => !safe.has(id) && !outIds.has(id));
@@ -114,7 +122,37 @@ export default function IslandStage({ players, outIds, safeIds, latestRound, toR
     }, total);
   }
 
+  // ---- Final sequence: reads the stage's live state, tosses with the same give() ----
+  const live = useRef<SequenceInput>({ participants: [], atRisk: [], safe, nameOf: () => "" });
+  const seatedSet = new Set(seated);
+  live.current = {
+    participants: onIsland.map((p) => p.id).filter((id) => seatedSet.has(id)),
+    atRisk: atRiskIds,
+    safe,
+    nameOf: (id) => (byId[id] ? displayName(byId[id]) : "A removed player"),
+  };
+  const giveLatest = useRef(give);
+  giveLatest.current = give;
+  const getInput = useCallback(() => live.current, []);
+  const giveOne = useCallback((id: string) => giveLatest.current([id]), []);
+  const seq = useFinalSequence(getInput, giveOne);
+  const running = seq.status === "running";
+  const notReady = running ? null : validateSequence(live.current);
+
+  useEffect(() => { onLockChange(running); }, [running, onLockChange]);
+  useEffect(() => { if (running) setHover(null); }, [running]);
+  // A new draw (or undo) mid-sequence changes who's at risk: stop rather than guess.
+  const atRiskKey = atRiskIds.join(",");
+  const firstKey = useRef(atRiskKey);
+  useEffect(() => {
+    if (firstKey.current === atRiskKey) return;
+    firstKey.current = atRiskKey;
+    seq.clear();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [atRiskKey]);
+
   function toggle(id: string) {
+    if (running) return; // the sequence is in control
     if (outIds.has(id)) return; // already out: nothing to give
     if (safe.has(id)) setSafe((s) => { const n = new Set(s); n.delete(id); return n; });
     else give([id]);
@@ -149,18 +187,35 @@ export default function IslandStage({ players, outIds, safeIds, latestRound, toR
         <h3 id="stage-h">Campfire stage</h3>
         <div className="stage-buttons">
           <button className="btn btn-sm" onClick={toggleFullscreen}>⛶ Full screen</button>
-          <button className="btn btn-sm" onClick={() => setOrder(shuffled(active.map((p) => p.id)))}>Shuffle seats</button>
+          <button className="btn btn-sm" disabled={running} onClick={() => setOrder(shuffled(active.map((p) => p.id)))}>Shuffle seats</button>
           {latestRound !== null && safeIds.length > 0 && (
-            <button className="btn btn-sm" onClick={() => give(safeIds, 120)}>Marshmallows to round {latestRound} safe</button>
+            <button className="btn btn-sm" disabled={running} onClick={() => give(safeIds, 120)}>Marshmallows to round {latestRound} safe</button>
           )}
-          <button className="btn btn-sm" disabled={safe.size === 0} onClick={() => setSafe(new Set())}>Reset</button>
-          <button className="btn btn-sm" disabled={status === "copying" || status === "exporting"} onClick={() => capture("copy")}>
+          <button className="btn btn-sm" disabled={running || safe.size === 0} onClick={() => { seq.clear(); setSafe(new Set()); }}>Reset</button>
+          <button className="btn btn-sm" disabled={running || status === "copying" || status === "exporting"} onClick={() => capture("copy")}>
             {status === "copying" ? "Copying..." : status === "copied" ? "Image copied" : "Copy image"}
           </button>
-          <button className="btn btn-sm btn-primary" disabled={status === "copying" || status === "exporting"} onClick={() => capture("export")}>
+          <button className="btn btn-sm btn-primary" disabled={running || status === "copying" || status === "exporting"} onClick={() => capture("export")}>
             {status === "exporting" ? "Exporting..." : "Export PNG"}
           </button>
         </div>
+      </div>
+      <div className={`fs-controls${running ? " running" : ""}`}>
+        {running ? (
+          <>
+            <span className="fs-running" role="status">● FINAL SEQUENCE RUNNING</span>
+            <button className="btn btn-sm btn-danger" onClick={seq.cancel}>Cancel sequence</button>
+          </>
+        ) : (
+          <>
+            <button className="btn btn-sm fs-start" disabled={notReady !== null} onClick={seq.start}>Start final sequence</button>
+            <span className="muted small">
+              {notReady ?? `Reveals the ${live.current.participants.filter((id) => !safe.has(id)).length - atRiskIds.length} remaining safe campers automatically, then stops on the final ${atRiskIds.length}.`}
+            </span>
+          </>
+        )}
+        {seq.error && <p className="error fs-error" role="alert">Final sequence stopped: {seq.error}</p>}
+        {seq.status === "done" && <span className="fs-done">Final sequence finished. Final {atRiskIds.length} at risk.</span>}
       </div>
       <p className="muted small stage-hint">
         Click someone to toss them a marshmallow (click again to take it back). Players out from earlier rounds are greyed.
@@ -169,7 +224,7 @@ export default function IslandStage({ players, outIds, safeIds, latestRound, toR
       </p>
 
       <div ref={fsRef} className={`stage-fs${fullscreen ? " is-full" : ""}`}>
-      {fullscreen && (
+      {fullscreen && !running && (
         <button className="stage-fs-exit" onClick={toggleFullscreen} aria-label="Exit full screen">✕ Exit full screen (Esc)</button>
       )}
       <div ref={stageRef} className={`stage${capturing ? " capturing" : ""}`} onMouseLeave={() => setHover(null)}>
@@ -179,19 +234,21 @@ export default function IslandStage({ players, outIds, safeIds, latestRound, toR
           const [x, y] = seatOf(id);
           const out = outIds.has(id);
           const isSafe = safe.has(id) && !out;
+          const spot = seq.scene.spotlightId === id;
           // Toss path, from the campfire to this seat, in container units (cqw).
           const dx = FIRE[0] - x;
           const dy = (FIRE[1] - y) * ASPECT;
-          const grey = out || isSafe;
-          // Greyed players don't get the hover focus, except while their marshmallow is in the air.
-          const focused = hover === id && (!grey || tossing.has(id));
-          const cls = ["stage-seat", grey && "grey", focused && "focus"].filter(Boolean).join(" ");
+          // Safe campers grey out once their marshmallow has landed.
+          const grey = out || (isSafe && !tossing.has(id));
+          // Greyed players don't get the hover focus, except while their marshmallow is in the air. None while the sequence runs.
+          const focused = !running && hover === id && (!grey || tossing.has(id));
+          const cls = ["stage-seat", grey && "grey", focused && "focus", spot && "spot"].filter(Boolean).join(" ");
           return (
             <button key={id} type="button" className={cls}
               style={{ left: `${x}%`, top: `${y}%`, width: `${AVATAR_W}%`, zIndex: focused ? 100 : Math.round(y) } as React.CSSProperties}
-              onMouseEnter={() => !capturing && setHover(id)} onFocus={() => setHover(id)}
+              onMouseEnter={() => !capturing && !running && setHover(id)} onFocus={() => !running && setHover(id)}
               onMouseLeave={() => setHover((h) => (h === id ? null : h))} onBlur={() => setHover((h) => (h === id ? null : h))}
-              onClick={() => toggle(id)} aria-pressed={isSafe} aria-disabled={out}
+              onClick={() => toggle(id)} aria-pressed={isSafe} aria-disabled={out || running}
               aria-label={`${displayName(p)}${out ? ", out" : isSafe ? ", safe" : ""}${out ? "" : isSafe ? ". Click to take back the marshmallow" : ". Click to toss a marshmallow"}`}>
               <span className="stage-name">{displayName(p)}</span>
               <Avatar src={p.discord_avatar_url} name={displayName(p)} size={128} />
@@ -203,6 +260,8 @@ export default function IslandStage({ players, outIds, safeIds, latestRound, toR
             </button>
           );
         })}
+
+        <FinalSequenceOverlay scene={seq.scene} name={seq.scene.camperId ? live.current.nameOf(seq.scene.camperId) : ""} />
 
         {showCountdown && (
           <p className="stage-countdown" role="status" key={left}>
