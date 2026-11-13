@@ -16,8 +16,11 @@ export const FINAL_AT_RISK = 2;
 /** It can start once this many (or fewer) campers are unsafe... and at least FINAL_AT_RISK + 1. */
 export const MIN_UNSAFE_TO_START = FINAL_AT_RISK + 1;
 
-/** When this many (or fewer) campers are still waiting, everyone else fades and they regroup in the middle. */
-export const REGROUP_AT = 6;
+/**
+ * Regroups: when this many (or fewer) campers are still waiting, everyone else
+ * fades and they gather in the middle. Happens at 6, then again at 3.
+ */
+export const REGROUP_AT = [6, 3];
 export const REGROUP_MS = 1500;   // fade + slide into the triangle (matches the CSS transitions)
 export const COUNTDOWN_STEP_MS = 850; // each of 3, 2, 1
 
@@ -30,9 +33,9 @@ export const TOSS_MS = 750;     // the stage's existing marshmallow toss
  * waiting, before this reveal. flipMs = the whole tag flip (slowest for the last name).
  */
 export function timingFor(unsafe: number) {
-  if (unsafe <= 3) return { stageHold: 2000, hiddenHold: 1000, nameHold: 2000, safeHold: 1500, flipMs: 1000 }; // last reveal
-  if (unsafe === 4) return { stageHold: 1500, hiddenHold: 700, nameHold: 1600, safeHold: 1300, flipMs: 650 };
-  if (unsafe <= REGROUP_AT) return { stageHold: 700, hiddenHold: 400, nameHold: 1200, safeHold: 800, flipMs: 420 };
+  if (unsafe <= 3) return { stageHold: 2000, hiddenHold: 1400, nameHold: 2200, safeHold: 1500, flipMs: 1800 }; // last reveal
+  if (unsafe === 4) return { stageHold: 1500, hiddenHold: 700, nameHold: 1600, safeHold: 1300, flipMs: 800 };
+  if (unsafe <= 6) return { stageHold: 700, hiddenHold: 400, nameHold: 1200, safeHold: 800, flipMs: 420 };
   return { stageHold: 300, hiddenHold: 300, nameHold: 1000, safeHold: 400, flipMs: 320 };
 }
 
@@ -163,7 +166,7 @@ export function useFinalSequence(
       }
       setScene(IDLE);
 
-      let regrouped = false;
+      let regroupedAt: number | null = null;
       for (const id of reveals) {
         // Re-check against live state before every reveal.
         const now = getInput();
@@ -173,9 +176,10 @@ export function useFinalSequence(
         if (!now.participants.includes(id)) throw new Error(`${now.nameOf(id)} left the ceremony during the animation. Stopped.`);
         if (now.safe.has(id)) continue; // already safe somehow: never reveal twice
 
-        // Down to the final few: everyone else fades and they gather in the middle.
-        if (!regrouped && unsafe.length <= REGROUP_AT) {
-          regrouped = true;
+        // Down to the final few (6, then 3): everyone else fades and they gather in the middle.
+        const step = REGROUP_AT.filter((n) => unsafe.length <= n).pop();
+        if (step !== undefined && step !== regroupedAt) {
+          regroupedAt = step;
           regroup(unsafe);
           await wait(REGROUP_MS, run.signal);
         }

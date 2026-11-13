@@ -156,9 +156,14 @@ export default function IslandStage({ players, outIds, atRiskIds, safeIds, lates
   giveLatest.current = give;
   const getInput = useCallback(() => live.current, []);
   const giveOne = useCallback((id: string) => giveLatest.current([id]), []);
-  // Keep each camper's left-to-right, back-to-front order when they move to the triangle.
+  // Keep each camper's back-to-front, left-to-right order when they move: whoever is
+  // already in the triangle keeps their rank, so people on the top stumps stay put at 3.
   const regroup = useCallback((ids: string[] | null) => {
-    setFinalFew(ids && [...ids].sort((a, b) => order.indexOf(a) - order.indexOf(b)));
+    setFinalFew((prev) => {
+      if (!ids) return null;
+      const rank = (id: string) => (prev && prev.includes(id) ? prev.indexOf(id) : 100 + order.indexOf(id));
+      return [...ids].sort((a, b) => rank(a) - rank(b));
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [order.join(",")]);
   const seq = useFinalSequence(getInput, giveOne, regroup);
