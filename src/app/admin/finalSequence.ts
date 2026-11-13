@@ -50,7 +50,7 @@ export interface SequenceScene {
   dim: boolean;               // dark overlay over the stage
   rig: RigPos | null;         // null = arm/tag not shown
   camperId: string | null;    // whose tag it is
-  side: "back" | "front";     // tag-bottom.png (hidden) or tag-top.png (name)
+  side: "back" | "front";     // tag-back.png (hidden) or tag-top.png (name)
   flipClosed: boolean;        // mid-flip: tag squashed to zero width
   spotlightId: string | null; // camper drawn above the dim while their marshmallow lands
   flipMs: number;             // how long this tag's flip takes
@@ -218,9 +218,14 @@ export function useFinalSequence(
         setScene(IDLE);
         await wait(t.safeHold, run.signal);
       }
+      // Only the at-risk campers are left: everyone else fades and they move to the middle.
+      const end = getInput();
+      regroup(end.participants.filter((p) => !end.safe.has(p)));
+      await wait(REGROUP_MS, run.signal);
+
       controller.current = null;
       setScene(IDLE);
-      setStatus("done"); // only the at-risk campers are left unsafe
+      setStatus("done");
     } catch (e) {
       if (e instanceof Cancelled) return; // stop() already cleaned up
       stop(e instanceof Error ? e.message : "The animation stopped unexpectedly.");

@@ -40,6 +40,8 @@ function TagName({ name }: { name: string }) {
   );
 }
 
+// Tag art: tag-back.png is the back (rope on the right; new file name so cached
+// copies of the old back aren't shown), tag-top.png is the front (rope on the left).
 export default function FinalSequenceOverlay({ scene, name }: { scene: SequenceScene; name: string }) {
   return (
     <>
@@ -54,7 +56,7 @@ export default function FinalSequenceOverlay({ scene, name }: { scene: SequenceS
             <div className={`fs-tag-card${scene.flipClosed ? " closed" : ""}`}
               style={{ "--flip-half": `${scene.flipMs / 2}ms` } as CSSProperties}>
               {scene.side === "back" ? (
-                <Image src="/assets/tag-bottom.png" alt="" width={1774} height={887} className="fs-tag-img" priority />
+                <Image src="/assets/tag-back.png" alt="" width={1774} height={887} className="fs-tag-img" priority />
               ) : (
                 <>
                   <Image src="/assets/tag-top.png" alt="" width={1774} height={887} className="fs-tag-img" priority />

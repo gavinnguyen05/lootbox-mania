@@ -34,7 +34,7 @@ const FINAL_FEW_STUMPS: Record<number, number[]> = {
   5: [7, 8, 12, 13, 14],
   4: [7, 8, 12, 14],
   3: [2, 7, 8],
-  2: [7, 8],
+  2: [7, 8],   // the final two: middle pair of the middle row
   1: [13],
 };
 const AVATAR_W = 7.06;            // % of picture width
