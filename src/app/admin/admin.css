@@ -434,14 +434,14 @@
 .fs-error { flex-basis: 100%; margin: 0; }
 .fs-done { font-family: var(--ui); font-size: 14px; color: var(--muted); }
 
-.fs-dim { position: absolute; inset: 0; z-index: 150; background: #000; opacity: 0; pointer-events: none; transition: opacity .3s ease; }
+.fs-dim { position: absolute; inset: 0; z-index: 150; background: #000; opacity: 0; pointer-events: none; transition: opacity .25s ease; }   /* = DIM_FADE_MS */
 .fs-dim.on { opacity: .6; }
 .stage-seat.spot { z-index: 160 !important; }
 
 /* The rig marks the tag's resting spot (middle of the stage). The tag and arm each slide in and out of it. */
 .fs-rig { position: absolute; left: var(--fs-tag-x); top: var(--fs-tag-y); z-index: 170; width: 0; height: 0; pointer-events: none; }
 .fs-tag { position: absolute; left: calc(var(--fs-tag-w) / -2); top: 0; width: var(--fs-tag-w); transform: translateY(-50%); }
-.fs-tag-move, .fs-arm { transition: transform .65s cubic-bezier(.3, .7, .3, 1); }
+.fs-tag-move, .fs-arm { transition: transform .5s cubic-bezier(.3, .7, .3, 1); }   /* = RIG_MOVE_MS */
 .fs-arm { position: absolute; left: var(--fs-arm-left); top: var(--fs-arm-top); width: var(--fs-arm-w); max-width: none; height: auto; z-index: 3; }
 .fs-rig.at-below .fs-tag-move, .fs-rig.at-below .fs-arm { transform: translateY(45cqw); }   /* under the frame */
 .fs-rig.at-hold .fs-tag-move, .fs-rig.at-hold .fs-arm { transform: none; }                   /* tag carried to the middle */

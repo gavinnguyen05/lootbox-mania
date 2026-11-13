@@ -16,16 +16,16 @@ export const FINAL_AT_RISK = 2;
 /** It can start once this many (or fewer) campers are unsafe... and at least FINAL_AT_RISK + 1. */
 export const MIN_UNSAFE_TO_START = FINAL_AT_RISK + 1;
 
-export const DIM_FADE_MS = 300;
-export const RIG_MOVE_MS = 650; // arm/tag moving between positions (matches the CSS transition)
+export const DIM_FADE_MS = 250;
+export const RIG_MOVE_MS = 500; // arm/tag moving between positions (matches the CSS transition)
 export const FLIP_MS = 320;     // full flip; each half is FLIP_MS / 2 (matches the CSS transition)
 export const TOSS_MS = 750;     // the stage's existing marshmallow toss
 
 /** Slower as fewer campers remain. `unsafe` = campers still waiting, before this reveal. */
 export function timingFor(unsafe: number) {
-  if (unsafe <= 3) return { stageHold: 2700, hiddenHold: 1250, nameHold: 2300, safeHold: 2000 };
-  if (unsafe === 4) return { stageHold: 2000, hiddenHold: 900, nameHold: 2000, safeHold: 1800 };
-  return { stageHold: 1300, hiddenHold: 500, nameHold: 1500, safeHold: 1500 };
+  if (unsafe <= 3) return { stageHold: 2000, hiddenHold: 900, nameHold: 1800, safeHold: 1500 };
+  if (unsafe === 4) return { stageHold: 1500, hiddenHold: 650, nameHold: 1500, safeHold: 1300 };
+  return { stageHold: 900, hiddenHold: 350, nameHold: 1100, safeHold: 1000 };
 }
 
 /**
@@ -156,7 +156,7 @@ export function useFinalSequence(getInput: () => SequenceInput, give: (id: strin
         setScene({ ...IDLE, dim: true, rig: "below", camperId: id });
         await wait(DIM_FADE_MS, run.signal);
         setScene((s) => ({ ...s, rig: "hold" }));
-        await wait(RIG_MOVE_MS + 250, run.signal);
+        await wait(RIG_MOVE_MS + 150, run.signal);
 
         // The arm lets go and sinks back out of frame; the tag stays put.
         setScene((s) => ({ ...s, rig: "release" }));
@@ -175,7 +175,7 @@ export function useFinalSequence(getInput: () => SequenceInput, give: (id: strin
         // Marshmallow: the stage's own toss. Their seat sits above the dim while it lands.
         setScene((s) => ({ ...s, spotlightId: id }));
         give(id);
-        await wait(TOSS_MS + 150, run.signal);
+        await wait(TOSS_MS + 100, run.signal);
 
         // Lights back up, hold the new scene.
         setScene((s) => ({ ...s, dim: false, rig: null }));
