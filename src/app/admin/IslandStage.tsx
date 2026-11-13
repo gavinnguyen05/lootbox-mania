@@ -10,7 +10,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import type { AdminPlayer } from "@/lib/types";
-import { displayName } from "@/lib/names";
+import { islandName } from "./islandNames";
 import { copyElementAsImage, downloadElementAsPng } from "@/lib/copy-image";
 import Avatar from "@/components/Avatar";
 import FinalSequenceOverlay from "./FinalSequenceOverlay";
@@ -129,7 +129,7 @@ export default function IslandStage({ players, outIds, atRiskIds, safeIds, lates
     participants: onIsland.map((p) => p.id).filter((id) => seatedSet.has(id)),
     atRisk: atRiskIds,
     safe,
-    nameOf: (id) => (byId[id] ? displayName(byId[id]) : "A removed player"),
+    nameOf: (id) => (byId[id] ? islandName(byId[id]) : "A removed player"),
   };
   const giveLatest = useRef(give);
   giveLatest.current = give;
@@ -249,9 +249,9 @@ export default function IslandStage({ players, outIds, atRiskIds, safeIds, lates
               onMouseEnter={() => !capturing && !running && setHover(id)} onFocus={() => !running && setHover(id)}
               onMouseLeave={() => setHover((h) => (h === id ? null : h))} onBlur={() => setHover((h) => (h === id ? null : h))}
               onClick={() => toggle(id)} aria-pressed={isSafe} aria-disabled={out || running}
-              aria-label={`${displayName(p)}${out ? ", out" : isSafe ? ", safe" : ""}${out ? "" : isSafe ? ". Click to take back the marshmallow" : ". Click to toss a marshmallow"}`}>
-              <span className="stage-name">{displayName(p)}</span>
-              <Avatar src={p.discord_avatar_url} name={displayName(p)} size={128} />
+              aria-label={`${islandName(p)}${out ? ", out" : isSafe ? ", safe" : ""}${out ? "" : isSafe ? ". Click to take back the marshmallow" : ". Click to toss a marshmallow"}`}>
+              <span className="stage-name">{islandName(p)}</span>
+              <Avatar src={p.discord_avatar_url} name={islandName(p)} size={128} />
               {isSafe && (
                 <Image src={MARSHMALLOW} alt="" width={64} height={68}
                   className={`stage-mallow${tossing.has(id) ? " toss" : ""}`}

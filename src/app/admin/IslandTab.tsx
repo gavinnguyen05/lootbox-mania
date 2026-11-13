@@ -7,7 +7,7 @@
 import { useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { AdminPlayer, IslandState } from "@/lib/types";
-import { displayName } from "@/lib/names";
+import { islandName } from "./islandNames";
 import { islandMessage } from "@/lib/candy";
 import Avatar from "@/components/Avatar";
 import IslandStage from "./IslandStage";
@@ -44,7 +44,7 @@ export default function IslandTab({ players, island, setFlash }: {
   const latest = island.rounds[island.rounds.length - 1];
   const n = Number(remaining);
   const nOk = Number.isInteger(n) && n >= 1 && n < onIsland.length;
-  const name = (id: string) => (byId[id] ? displayName(byId[id]) : "Removed player");
+  const name = (id: string) => (byId[id] ? islandName(byId[id]) : "Removed player");
 
   async function run(task: () => Promise<IslandActionResult>, onOk?: (res: IslandActionResult) => void) {
     if (busyRef.current) return;
@@ -156,13 +156,13 @@ export default function IslandTab({ players, island, setFlash }: {
           <h3 id="isl-roster-h">Islanders</h3>
           <ul>
             {/* Still on the island first (A-Z), then the out players in the order they went out. */}
-            {[...active].sort((a, b) => (outRound[a.id] ?? 0) - (outRound[b.id] ?? 0) || displayName(a).localeCompare(displayName(b)))
+            {[...active].sort((a, b) => (outRound[a.id] ?? 0) - (outRound[b.id] ?? 0) || islandName(a).localeCompare(islandName(b)))
               .map((p) => {
                 const out = outRound[p.id];
                 return (
                   <li key={p.id} className={out !== undefined ? "out" : undefined}>
-                    <Avatar src={p.discord_avatar_url} name={displayName(p)} size={30} />
-                    <span className="isl-name">{displayName(p)}</span>
+                    <Avatar src={p.discord_avatar_url} name={islandName(p)} size={30} />
+                    <span className="isl-name">{islandName(p)}</span>
                     {out !== undefined ? <span className="isl-out-tag">Out R{out}</span> : <span className="isl-in-tag">On island</span>}
                   </li>
                 );
