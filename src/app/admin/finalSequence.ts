@@ -16,16 +16,24 @@ export const FINAL_AT_RISK = 2;
 /** It can start once this many (or fewer) campers are unsafe... and at least FINAL_AT_RISK + 1. */
 export const MIN_UNSAFE_TO_START = FINAL_AT_RISK + 1;
 
+/** When this many (or fewer) campers are still waiting, everyone else fades and they regroup in the middle. */
+export const REGROUP_AT = 6;
+export const REGROUP_MS = 1500;   // fade + slide into the triangle (matches the CSS transitions)
+export const COUNTDOWN_STEP_MS = 850; // each of 3, 2, 1
+
 export const DIM_FADE_MS = 250;
 export const RIG_MOVE_MS = 500; // arm/tag moving between positions (matches the CSS transition)
-export const FLIP_MS = 320;     // full flip; each half is FLIP_MS / 2 (matches the CSS transition)
 export const TOSS_MS = 750;     // the stage's existing marshmallow toss
 
-/** Slower as fewer campers remain. `unsafe` = campers still waiting, before this reveal. */
+/**
+ * Quick at the start, slower as fewer campers remain. `unsafe` = campers still
+ * waiting, before this reveal. flipMs = the whole tag flip (slowest for the last name).
+ */
 export function timingFor(unsafe: number) {
-  if (unsafe <= 3) return { stageHold: 2000, hiddenHold: 900, nameHold: 1800, safeHold: 1500 };
-  if (unsafe === 4) return { stageHold: 1500, hiddenHold: 650, nameHold: 1500, safeHold: 1300 };
-  return { stageHold: 900, hiddenHold: 350, nameHold: 1100, safeHold: 1000 };
+  if (unsafe <= 3) return { stageHold: 2000, hiddenHold: 1000, nameHold: 2000, safeHold: 1500, flipMs: 1000 }; // last reveal
+  if (unsafe === 4) return { stageHold: 1500, hiddenHold: 700, nameHold: 1600, safeHold: 1300, flipMs: 650 };
+  if (unsafe <= REGROUP_AT) return { stageHold: 700, hiddenHold: 400, nameHold: 1200, safeHold: 800, flipMs: 420 };
+  return { stageHold: 300, hiddenHold: 300, nameHold: 1000, safeHold: 400, flipMs: 320 };
 }
 
 /**
@@ -42,9 +50,11 @@ export interface SequenceScene {
   side: "back" | "front";     // tag-bottom.png (hidden) or tag-top.png (name)
   flipClosed: boolean;        // mid-flip: tag squashed to zero width
   spotlightId: string | null; // camper drawn above the dim while their marshmallow lands
+  flipMs: number;             // how long this tag's flip takes
+  countdown: number | null;   // 3, 2, 1 before it starts
 }
 
-const IDLE: SequenceScene = { dim: false, rig: null, camperId: null, side: "back", flipClosed: false, spotlightId: null };
+const IDLE: SequenceScene = { dim: false, rig: null, camperId: null, side: "back", flipClosed: false, spotlightId: null, flipMs: 320, countdown: null };
 
 export interface SequenceInput {
   /** Campers in this ceremony: active, on a stump, not out in an earlier round. */
@@ -101,7 +111,12 @@ export type SequenceStatus = "idle" | "running" | "done";
  * Runs the sequence. `getInput` reads the stage's CURRENT state each step (not a
  * stale copy), and `give` is the stage's own marshmallow toss.
  */
-export function useFinalSequence(getInput: () => SequenceInput, give: (id: string) => void) {
+export function useFinalSequence(
+  getInput: () => SequenceInput,
+  give: (id: string) => void,
+  /** Final-few layout: the campers to gather in the middle, or null to put everyone back on their own stumps. */
+  regroup: (ids: string[] | null) => void,
+) {
   const [status, setStatus] = useState<SequenceStatus>("idle");
   const [scene, setScene] = useState<SequenceScene>(IDLE);
   const [error, setError] = useState<string | null>(null);
@@ -112,11 +127,12 @@ export function useFinalSequence(getInput: () => SequenceInput, give: (id: strin
     controller.current = null;
     setScene(IDLE);
     setStatus("idle");
+    regroup(null); // back to the normal seating
     if (message) {
       setError(message);
       console.error("[final sequence]", message);
     }
-  }, []);
+  }, [regroup]);
 
   // Leaving the tab/page mid-sequence: cancel every pending step.
   useEffect(() => () => controller.current?.abort(), []);
@@ -140,6 +156,14 @@ export function useFinalSequence(getInput: () => SequenceInput, give: (id: strin
     const reveals = shuffled(first.participants.filter((id) => !first.safe.has(id) && !atRisk.has(id)));
 
     try {
+      // 3, 2, 1
+      for (const n of [3, 2, 1]) {
+        setScene({ ...IDLE, countdown: n });
+        await wait(COUNTDOWN_STEP_MS, run.signal);
+      }
+      setScene(IDLE);
+
+      let regrouped = false;
       for (const id of reveals) {
         // Re-check against live state before every reveal.
         const now = getInput();
@@ -149,11 +173,18 @@ export function useFinalSequence(getInput: () => SequenceInput, give: (id: strin
         if (!now.participants.includes(id)) throw new Error(`${now.nameOf(id)} left the ceremony during the animation. Stopped.`);
         if (now.safe.has(id)) continue; // already safe somehow: never reveal twice
 
+        // Down to the final few: everyone else fades and they gather in the middle.
+        if (!regrouped && unsafe.length <= REGROUP_AT) {
+          regrouped = true;
+          regroup(unsafe);
+          await wait(REGROUP_MS, run.signal);
+        }
+
         const t = timingFor(unsafe.length);
         await wait(t.stageHold, run.signal);
 
         // Dim, then the arm brings the hidden tag up from below into the middle.
-        setScene({ ...IDLE, dim: true, rig: "below", camperId: id });
+        setScene({ ...IDLE, dim: true, rig: "below", camperId: id, flipMs: t.flipMs });
         await wait(DIM_FADE_MS, run.signal);
         setScene((s) => ({ ...s, rig: "hold" }));
         await wait(RIG_MOVE_MS + 150, run.signal);
@@ -164,9 +195,9 @@ export function useFinalSequence(getInput: () => SequenceInput, give: (id: strin
 
         // The tag flips on its own: squash to nothing, swap to the name side, open back up.
         setScene((s) => ({ ...s, flipClosed: true }));
-        await wait(FLIP_MS / 2, run.signal);
+        await wait(t.flipMs / 2, run.signal);
         setScene((s) => ({ ...s, side: "front", flipClosed: false }));
-        await wait(FLIP_MS / 2 + t.nameHold, run.signal);
+        await wait(t.flipMs / 2 + t.nameHold, run.signal);
 
         // The tag drops back out of frame.
         setScene((s) => ({ ...s, rig: "exit" }));
@@ -190,7 +221,7 @@ export function useFinalSequence(getInput: () => SequenceInput, give: (id: strin
       if (e instanceof Cancelled) return; // stop() already cleaned up
       stop(e instanceof Error ? e.message : "The animation stopped unexpectedly.");
     }
-  }, [getInput, give, stop]);
+  }, [getInput, give, regroup, stop]);
 
   const cancel = useCallback(() => stop(), [stop]);
   const clear = useCallback(() => { stop(); setError(null); }, [stop]);

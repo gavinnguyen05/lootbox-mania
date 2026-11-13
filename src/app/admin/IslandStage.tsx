@@ -25,6 +25,18 @@ const STUMPS: [number, number][] = [
   [12.38, 52.28], [26.85, 52.21], [41.09, 52.21], [55.02, 52.21], [68.9, 52.21], [82.95, 52.21],
   [16.81, 69.32], [32.12, 69.32], [47.37, 69.29], [62.44, 69.32], [77.87, 69.32],
 ];
+/**
+ * Stumps the final few gather on, by how many are left: a 1-2-3 triangle in the
+ * middle for 6 (indexes into STUMPS), smaller shapes for fewer.
+ */
+const FINAL_FEW_STUMPS: Record<number, number[]> = {
+  6: [2, 7, 8, 12, 13, 14],
+  5: [7, 8, 12, 13, 14],
+  4: [7, 8, 12, 14],
+  3: [2, 7, 8],
+  2: [7, 8],
+  1: [13],
+};
 const AVATAR_W = 7.06;            // % of picture width
 const FIRE: [number, number] = [86.5, 83]; // campfire, % of picture: where marshmallows are tossed from
 const ASPECT = BG.height / BG.width;
@@ -95,7 +107,16 @@ export default function IslandStage({ players, outIds, atRiskIds, safeIds, lates
 
   const seated = order.slice(0, STUMPS.length);
   const unseated = order.length - seated.length;
-  const seatOf = (id: string) => STUMPS[seated.indexOf(id)];
+  // Final few (set by the animation): they gather in the middle, everyone else fades away.
+  const [finalFew, setFinalFew] = useState<string[] | null>(null);
+  const seatOf = (id: string) => {
+    if (finalFew) {
+      const i = finalFew.indexOf(id);
+      const slots = FINAL_FEW_STUMPS[finalFew.length];
+      if (i >= 0 && slots) return STUMPS[slots[i]];
+    }
+    return STUMPS[seated.indexOf(id)];
+  };
 
   // In this ceremony: everyone still on the island (not out in an earlier round), including the at-risk ones.
   const onIsland = active.filter((p) => !outIds.has(p.id));
@@ -135,7 +156,12 @@ export default function IslandStage({ players, outIds, atRiskIds, safeIds, lates
   giveLatest.current = give;
   const getInput = useCallback(() => live.current, []);
   const giveOne = useCallback((id: string) => giveLatest.current([id]), []);
-  const seq = useFinalSequence(getInput, giveOne);
+  // Keep each camper's left-to-right, back-to-front order when they move to the triangle.
+  const regroup = useCallback((ids: string[] | null) => {
+    setFinalFew(ids && [...ids].sort((a, b) => order.indexOf(a) - order.indexOf(b)));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [order.join(",")]);
+  const seq = useFinalSequence(getInput, giveOne, regroup);
   const running = seq.status === "running";
   const notReady = running ? null : validateSequence(live.current);
 
@@ -242,7 +268,8 @@ export default function IslandStage({ players, outIds, atRiskIds, safeIds, lates
           const grey = out || (isSafe && !tossing.has(id));
           // Greyed players don't get the hover focus, except while their marshmallow is in the air. None while the sequence runs.
           const focused = !running && hover === id && (!grey || tossing.has(id));
-          const cls = ["stage-seat", grey && "grey", focused && "focus", spot && "spot"].filter(Boolean).join(" ");
+          const gone = finalFew !== null && !finalFew.includes(id);
+          const cls = ["stage-seat", grey && "grey", focused && "focus", spot && "spot", gone && "gone"].filter(Boolean).join(" ");
           return (
             <button key={id} type="button" className={cls}
               style={{ left: `${x}%`, top: `${y}%`, width: `${AVATAR_W}%`, zIndex: focused ? 100 : Math.round(y) } as React.CSSProperties}

@@ -365,8 +365,10 @@
 .stage-seat {
   position: absolute; transform: translate(-50%, -100%); transform-origin: 50% 100%;
   padding: 0; border: 0; background: none; cursor: pointer; display: grid; justify-items: center;
-  transition: transform .15s ease;
+  /* left/top/opacity: the final few sliding to the middle while the rest fade (= REGROUP_MS). */
+  transition: transform .15s ease, left 1.2s cubic-bezier(.4, 0, .2, 1), top 1.2s cubic-bezier(.4, 0, .2, 1), opacity .8s ease;
 }
+.stage-seat.gone { opacity: 0; pointer-events: none; }
 .stage-seat[aria-disabled="true"] { cursor: default; }
 .stage-seat .avatar { width: 100%; height: auto; aspect-ratio: 1; box-shadow: 0 .4cqw .9cqw rgba(0, 0, 0, .45); }
 .stage-seat .avatar-fallback { font-size: 3cqw; }
@@ -448,7 +450,7 @@
 .fs-rig.at-release .fs-tag-move { transform: none; }
 .fs-rig.at-release .fs-arm, .fs-rig.at-exit .fs-arm { transform: translateY(70cqw); }       /* arm sinks away */
 .fs-rig.at-exit .fs-tag-move { transform: translateY(45cqw); }                              /* tag drops out */
-.fs-tag-card { position: relative; z-index: 2; transition: transform .16s linear; }
+.fs-tag-card { position: relative; z-index: 2; transition: transform var(--flip-half, .16s) ease-in-out; }
 .fs-tag-card.closed { transform: scaleX(0); }
 .fs-tag-img { display: block; width: 100%; height: auto; }
 /* Name sits on the tag's light panel (29%-91% across, 24%-80% down in tag-top.png). */
@@ -459,3 +461,18 @@
 }
 .fs-tag-name-probe { position: absolute; left: 0; top: 0; visibility: hidden; white-space: nowrap; font-family: "Samdan Evil", var(--font); line-height: 1; pointer-events: none; }
 .stage.capturing .fs-tag-move, .stage.capturing .fs-arm, .stage.capturing .fs-dim, .stage.capturing .fs-tag-card { transition: none !important; }
+
+/* 3, 2, 1 before the animation starts. */
+.fs-count {
+  position: absolute; left: 50%; top: 50%; z-index: 210; margin: 0; pointer-events: none;
+  font-family: "Samdan Evil", var(--font); font-size: 22cqw; line-height: 1;
+  color: #fff6e0; text-shadow: 0 .8cqw 0 #3b0f0a, 0 0 2.5cqw rgba(255, 140, 40, .7), 0 0 .5cqw #000;
+  animation: fs-count-pop .85s ease-out both;
+}
+@keyframes fs-count-pop {
+  0%   { opacity: 0; transform: translate(-50%, -50%) scale(1.5); }
+  20%  { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  80%  { opacity: 1; transform: translate(-50%, -50%) scale(.96); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(.9); }
+}
+@media (prefers-reduced-motion: reduce) { .fs-count { animation: none; transform: translate(-50%, -50%); } }

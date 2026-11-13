@@ -5,7 +5,7 @@
 // Layers (bottom to top): stage, dim, spotlighted seat, tag, arm (fingers over the tag's bottom edge).
 // Placement knobs are the --fs-* values in admin.css.
 
-import { useLayoutEffect, useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import Image from "next/image";
 import type { SequenceScene } from "./finalSequence";
 
@@ -44,11 +44,15 @@ export default function FinalSequenceOverlay({ scene, name }: { scene: SequenceS
   return (
     <>
       <div className={`fs-dim${scene.dim ? " on" : ""}`} aria-hidden />
+      {scene.countdown !== null && (
+        <p className="fs-count" key={scene.countdown} role="status">{scene.countdown}</p>
+      )}
       {scene.rig && (
         <div className={`fs-rig at-${scene.rig}`}>
           <div className="fs-tag">
             <div className={`fs-tag-move`}>
-            <div className={`fs-tag-card${scene.flipClosed ? " closed" : ""}`}>
+            <div className={`fs-tag-card${scene.flipClosed ? " closed" : ""}`}
+              style={{ "--flip-half": `${scene.flipMs / 2}ms` } as CSSProperties}>
               {scene.side === "back" ? (
                 <Image src="/assets/tag-bottom.png" alt="" width={1774} height={887} className="fs-tag-img" priority />
               ) : (
