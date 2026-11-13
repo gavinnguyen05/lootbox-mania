@@ -14,17 +14,11 @@ import { islandName } from "./islandNames";
 import { copyElementAsImage, downloadElementAsPng } from "@/lib/copy-image";
 import Avatar from "@/components/Avatar";
 import FinalSequenceOverlay from "./FinalSequenceOverlay";
+import { AVATAR_W, BG, STUMPS, shuffled } from "./islandLayout";
 import { useFinalSequence, validateSequence, type SequenceInput } from "./finalSequence";
 
-const BG = { src: "/assets/stumps.png", width: 1672, height: 941 };
 const MARSHMALLOW = "/assets/marshmallow.png";
 
-/** Where each avatar's feet go, as % of the picture. Measured from stumps.png (rows of 5, 6, 5). */
-const STUMPS: [number, number][] = [
-  [18.24, 36.2], [32.18, 36.2], [45.75, 36.2], [59.69, 36.2], [73.68, 36.2],
-  [12.38, 52.28], [26.85, 52.21], [41.09, 52.21], [55.02, 52.21], [68.9, 52.21], [82.95, 52.21],
-  [16.81, 69.32], [32.12, 69.32], [47.37, 69.29], [62.44, 69.32], [77.87, 69.32],
-];
 /**
  * Stumps the final few gather on, by how many are left: a 1-2-3 triangle in the
  * middle for 6 (indexes into STUMPS), smaller shapes for fewer.
@@ -37,20 +31,11 @@ const FINAL_FEW_STUMPS: Record<number, number[]> = {
   2: [7, 8],   // the final two: middle pair of the middle row
   1: [13],
 };
-const AVATAR_W = 7.06;            // % of picture width
 const FIRE: [number, number] = [86.5, 83]; // campfire, % of picture: where marshmallows are tossed from
 const ASPECT = BG.height / BG.width;
 /** Show the "marshmallows remain" overlay once this many or fewer are left. */
 const COUNTDOWN_FROM = 3;
 
-function shuffled<T>(list: T[]): T[] {
-  const a = [...list];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-}
 
 export default function IslandStage({ players, outIds, atRiskIds, safeIds, latestRound, toRemain, onLockChange }: {
   players: AdminPlayer[];

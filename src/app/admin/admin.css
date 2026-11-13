@@ -476,3 +476,19 @@
   100% { opacity: 0; transform: translate(-50%, -50%) scale(.9); }
 }
 @media (prefers-reduced-motion: reduce) { .fs-count { animation: none; transform: translate(-50%, -50%); } }
+
+/* ---------- Candy Island demo ---------- */
+.demo-wrap { margin-top: 18px; }
+.demo-seat { position: absolute; transform: translate(-50%, -100%); transform-origin: 50% 100%; display: grid; justify-items: center;
+             transition: opacity .45s ease, transform .45s ease; }
+.demo-seat.gone { opacity: 0; transform: translate(-50%, -100%) scale(.6); }
+.demo-face { position: relative; width: 100%; aspect-ratio: 1; }
+.demo-face .avatar, .demo-face .demo-silhouette { position: absolute; inset: 0; width: 100%; height: 100%; border-radius: 50%;
+             box-shadow: 0 .4cqw .9cqw rgba(0, 0, 0, .45); transition: opacity .5s ease; transition-delay: calc(var(--i) * 70ms); }
+.demo-face .avatar-fallback { font-size: 3cqw; }
+.demo-silhouette { opacity: 0; }
+.demo-seat.incog .demo-silhouette { opacity: 1; }
+.demo-seat.incog .avatar { opacity: 0; }
+.demo-name { transition: opacity .5s ease; transition-delay: calc(var(--i) * 70ms); }
+.demo-seat.incog .demo-name { opacity: 0; }
+@media (prefers-reduced-motion: reduce) { .demo-seat, .demo-face .avatar, .demo-face .demo-silhouette, .demo-name { transition: none; } }

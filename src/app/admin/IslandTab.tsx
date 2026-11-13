@@ -11,6 +11,7 @@ import { islandName } from "./islandNames";
 import { islandMessage } from "@/lib/candy";
 import Avatar from "@/components/Avatar";
 import IslandStage from "./IslandStage";
+import IslandDemo from "./IslandDemo";
 import { islandReset, islandRun, islandUndo, type ActionResult, type IslandActionResult } from "./actions";
 
 export default function IslandTab({ players, island, setFlash }: {
@@ -173,6 +174,8 @@ export default function IslandTab({ players, island, setFlash }: {
 
       <IslandStage players={players} outIds={stageOutIds} atRiskIds={latestRound?.remaining ?? []}
         safeIds={latest?.picked ?? []} latestRound={latest?.round ?? null} toRemain={n} onLockChange={setLocked} />
+
+      <IslandDemo players={players} />
     </div>
   );
 }
