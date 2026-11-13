@@ -82,7 +82,7 @@ export default function DockScene({ players, eliminatedIds, about }: {
 
         {open && player && (
           <div className="dock-overlay">
-            <article className="about-card" aria-live="polite" aria-label={`About ${islandName(player)}`}>
+            <article key={current} className="about-card" aria-live="polite" aria-label={`About ${islandName(player)}`}>
               <header className="about-head">
                 <Avatar src={player.discord_avatar_url} name={islandName(player)} size={128} />
                 <div>
@@ -91,7 +91,13 @@ export default function DockScene({ players, eliminatedIds, about }: {
                     <p className="about-real">{info.formName}</p>
                   )}
                 </div>
-                {count > 1 && <span className="about-count">{index + 1} / {count}</span>}
+                {count > 1 && (
+                  <span className="about-nav">
+                    <button className="about-arrow" onClick={() => go(-1)} aria-label="Previous player">‹</button>
+                    <span className="about-count">{index + 1} / {count}</span>
+                    <button className="about-arrow" onClick={() => go(1)} aria-label="Next player">›</button>
+                  </span>
+                )}
               </header>
               {info ? (
                 <dl className="about-grid">
@@ -107,12 +113,6 @@ export default function DockScene({ players, eliminatedIds, about }: {
                 <p className="about-none">No form answers matched for this player yet.</p>
               )}
             </article>
-            {count > 1 && (
-              <>
-                <button className="about-arrow left" onClick={() => go(-1)} aria-label="Previous player">‹</button>
-                <button className="about-arrow right" onClick={() => go(1)} aria-label="Next player">›</button>
-              </>
-            )}
           </div>
         )}
       </div>

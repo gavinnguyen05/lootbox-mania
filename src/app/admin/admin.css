@@ -485,34 +485,31 @@
 .dock-seat .avatar { width: 100%; height: auto; aspect-ratio: 1; box-shadow: 0 .4cqw .9cqw rgba(0, 0, 0, .5); }
 .dock-seat .avatar-fallback { font-size: 3cqw; }
 
-/* About-me card over the scene. Samdan Evil for headers, Arial for answers. */
-.dock-overlay { position: absolute; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center; background: rgba(0, 0, 0, .55); animation: dock-fade .25s ease-out both; }
-@keyframes dock-fade { from { opacity: 0; } to { opacity: 1; } }
+/* About-me card on the right side of the scene, beside the boat. Samdan Evil for headers, Arial for answers. */
+.dock-overlay { position: absolute; top: 0; bottom: 0; right: 2.5cqw; width: 50cqw; z-index: 50; display: flex; align-items: center; pointer-events: none; }
 .about-card {
-  width: 76cqw; max-height: 51cqw; overflow: hidden; padding: 2cqw 2.4cqw 2.2cqw;
+  pointer-events: auto; width: 100%; max-height: 52cqw; overflow: hidden; padding: 1.8cqw 2cqw 1.9cqw;
   background: #f7e3bd; color: #2a1a0e; border: .45cqw solid #4e2f17; border-radius: 1.4cqw;
-  box-shadow: 0 1cqw 0 rgba(0, 0, 0, .35); animation: about-in .3s ease-out both;
+  box-shadow: 0 1cqw 0 rgba(0, 0, 0, .35), 0 0 3cqw rgba(0, 0, 0, .35); animation: about-in .35s ease-out both;
 }
-@keyframes about-in { from { transform: translateY(1.5cqw) scale(.97); opacity: 0; } to { transform: none; opacity: 1; } }
-.about-head { display: flex; align-items: center; gap: 1.6cqw; padding-bottom: 1.1cqw; margin-bottom: 1.2cqw; border-bottom: .25cqw dashed #b78a55; }
-.about-head .avatar { width: 7.5cqw; height: 7.5cqw; flex: none; box-shadow: 0 0 0 .3cqw #4e2f17; }
-.about-head .avatar-fallback { font-size: 3cqw; }
-.about-name { margin: 0; font-family: "Samdan Evil", var(--font); font-size: 4.2cqw; line-height: 1; color: #2a1a0e; overflow-wrap: anywhere; }
-.about-real { margin: .4cqw 0 0; font-family: Arial, Helvetica, sans-serif; font-size: 1.3cqw; color: #6b4a2b; }
-.about-count { margin-left: auto; align-self: flex-start; font-family: "Samdan Evil", var(--font); font-size: 1.8cqw; color: #8a5a2b; }
-.about-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 1.1cqw 1.8cqw; margin: 0; }
+@keyframes about-in { from { transform: translateX(6cqw); opacity: 0; } to { transform: none; opacity: 1; } }
+.about-head { display: flex; align-items: center; gap: 1.3cqw; padding-bottom: .9cqw; margin-bottom: 1cqw; border-bottom: .25cqw dashed #b78a55; }
+.about-head .avatar { width: 6cqw; height: 6cqw; flex: none; box-shadow: 0 0 0 .3cqw #4e2f17; }
+.about-head .avatar-fallback { font-size: 2.6cqw; }
+.about-name { margin: 0; font-family: "Samdan Evil", var(--font); font-size: 3.4cqw; line-height: 1; color: #2a1a0e; overflow-wrap: anywhere; }
+.about-real { margin: .3cqw 0 0; font-family: Arial, Helvetica, sans-serif; font-size: 1.15cqw; color: #6b4a2b; }
+.about-nav { margin-left: auto; align-self: flex-start; display: flex; align-items: center; gap: .6cqw; }
+.about-count { font-family: "Samdan Evil", var(--font); font-size: 1.6cqw; color: #8a5a2b; white-space: nowrap; }
+.about-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: .9cqw 1.4cqw; margin: 0; }
 .about-item { grid-column: span 2; min-width: 0; }
 .about-item.wide { grid-column: span 6; }
 .about-item.half { grid-column: span 3; }
-.about-item dt { font-family: "Samdan Evil", var(--font); font-size: 1.45cqw; letter-spacing: .05cqw; text-transform: uppercase; color: #8a4b1c; margin-bottom: .25cqw; }
-.about-item dd { margin: 0; font-family: Arial, Helvetica, sans-serif; font-size: 1.3cqw; line-height: 1.35; overflow-wrap: anywhere; }
-.about-none { font-family: Arial, Helvetica, sans-serif; font-size: 1.5cqw; margin: 0; }
+.about-item dt { font-family: "Samdan Evil", var(--font); font-size: 1.25cqw; letter-spacing: .04cqw; text-transform: uppercase; color: #8a4b1c; margin-bottom: .2cqw; }
+.about-item dd { margin: 0; font-family: Arial, Helvetica, sans-serif; font-size: 1.12cqw; line-height: 1.35; overflow-wrap: anywhere; }
+.about-none { font-family: Arial, Helvetica, sans-serif; font-size: 1.3cqw; margin: 0; }
 .about-arrow {
-  position: absolute; top: 50%; transform: translateY(-50%); width: 5cqw; height: 5cqw; border-radius: 50%;
-  border: .3cqw solid #4e2f17; background: #f7e3bd; color: #4e2f17; font-size: 3.4cqw; line-height: 1; cursor: pointer;
-  display: grid; place-items: center; padding: 0 0 .4cqw;
+  width: 3.2cqw; height: 3.2cqw; border-radius: 50%; border: .25cqw solid #4e2f17; background: #fff1d6; color: #4e2f17;
+  font-size: 2.2cqw; line-height: 1; cursor: pointer; display: grid; place-items: center; padding: 0 0 .25cqw;
 }
-.about-arrow.left { left: 3cqw; }
-.about-arrow.right { right: 3cqw; }
-.about-arrow:hover, .about-arrow:focus-visible { background: #fff1d6; outline: none; box-shadow: 0 0 0 .3cqw var(--purple); }
+.about-arrow:hover, .about-arrow:focus-visible { background: #fff; outline: none; box-shadow: 0 0 0 .25cqw var(--purple); }
 @media (prefers-reduced-motion: reduce) { .dock-overlay, .about-card { animation: none; } }
