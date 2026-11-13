@@ -6,17 +6,18 @@
 
 import { useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import type { AdminPlayer, IslandState } from "@/lib/types";
+import type { AboutMe, AdminPlayer, IslandState } from "@/lib/types";
 import { islandName } from "./islandNames";
 import { islandMessage } from "@/lib/candy";
 import Avatar from "@/components/Avatar";
 import IslandStage from "./IslandStage";
-import IslandDemo from "./IslandDemo";
+import DockScene from "./DockScene";
 import { islandReset, islandRun, islandUndo, type ActionResult, type IslandActionResult } from "./actions";
 
-export default function IslandTab({ players, island, setFlash }: {
+export default function IslandTab({ players, island, about, setFlash }: {
   players: AdminPlayer[];
   island: IslandState;
+  about: { byPlayer: Record<string, AboutMe>; missing: string[] };
   setFlash: (f: ActionResult | null) => void;
 }) {
   const router = useRouter();
@@ -175,7 +176,7 @@ export default function IslandTab({ players, island, setFlash }: {
       <IslandStage players={players} outIds={stageOutIds} atRiskIds={latestRound?.remaining ?? []}
         safeIds={latest?.picked ?? []} latestRound={latest?.round ?? null} toRemain={n} onLockChange={setLocked} />
 
-      <IslandDemo players={players} />
+      <DockScene players={players} eliminatedIds={latestRound?.remaining ?? []} about={about} />
     </div>
   );
 }

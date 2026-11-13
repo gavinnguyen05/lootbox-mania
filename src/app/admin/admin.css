@@ -477,18 +477,42 @@
 }
 @media (prefers-reduced-motion: reduce) { .fs-count { animation: none; transform: translate(-50%, -50%); } }
 
-/* ---------- Candy Island demo ---------- */
-.demo-wrap { margin-top: 18px; }
-.demo-seat { position: absolute; transform: translate(-50%, -100%); transform-origin: 50% 100%; display: grid; justify-items: center;
-             transition: opacity .45s ease, transform .45s ease; }
-.demo-seat.gone { opacity: 0; transform: translate(-50%, -100%) scale(.6); }
-.demo-face { position: relative; width: 100%; aspect-ratio: 1; }
-.demo-face .avatar, .demo-face .demo-silhouette { position: absolute; inset: 0; width: 100%; height: 100%; border-radius: 50%;
-             box-shadow: 0 .4cqw .9cqw rgba(0, 0, 0, .45); transition: opacity .5s ease; transition-delay: calc(var(--i) * 70ms); }
-.demo-face .avatar-fallback { font-size: 3cqw; }
-.demo-silhouette { opacity: 0; }
-.demo-seat.incog .demo-silhouette { opacity: 1; }
-.demo-seat.incog .avatar { opacity: 0; }
-.demo-name { transition: opacity .5s ease; transition-delay: calc(var(--i) * 70ms); }
-.demo-seat.incog .demo-name { opacity: 0; }
-@media (prefers-reduced-motion: reduce) { .demo-seat, .demo-face .avatar, .demo-face .demo-silhouette, .demo-name { transition: none; } }
+
+/* ---------- Dock of Shame ---------- */
+.dock-wrap { margin-top: 18px; }
+.dock-stage { background: #14203a; }
+.dock-seat { position: absolute; transform: translate(-50%, -100%); display: grid; justify-items: center; }
+.dock-seat .avatar { width: 100%; height: auto; aspect-ratio: 1; box-shadow: 0 .4cqw .9cqw rgba(0, 0, 0, .5); }
+.dock-seat .avatar-fallback { font-size: 3cqw; }
+
+/* About-me card over the scene. Samdan Evil for headers, Arial for answers. */
+.dock-overlay { position: absolute; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center; background: rgba(0, 0, 0, .55); animation: dock-fade .25s ease-out both; }
+@keyframes dock-fade { from { opacity: 0; } to { opacity: 1; } }
+.about-card {
+  width: 76cqw; max-height: 51cqw; overflow: hidden; padding: 2cqw 2.4cqw 2.2cqw;
+  background: #f7e3bd; color: #2a1a0e; border: .45cqw solid #4e2f17; border-radius: 1.4cqw;
+  box-shadow: 0 1cqw 0 rgba(0, 0, 0, .35); animation: about-in .3s ease-out both;
+}
+@keyframes about-in { from { transform: translateY(1.5cqw) scale(.97); opacity: 0; } to { transform: none; opacity: 1; } }
+.about-head { display: flex; align-items: center; gap: 1.6cqw; padding-bottom: 1.1cqw; margin-bottom: 1.2cqw; border-bottom: .25cqw dashed #b78a55; }
+.about-head .avatar { width: 7.5cqw; height: 7.5cqw; flex: none; box-shadow: 0 0 0 .3cqw #4e2f17; }
+.about-head .avatar-fallback { font-size: 3cqw; }
+.about-name { margin: 0; font-family: "Samdan Evil", var(--font); font-size: 4.2cqw; line-height: 1; color: #2a1a0e; overflow-wrap: anywhere; }
+.about-real { margin: .4cqw 0 0; font-family: Arial, Helvetica, sans-serif; font-size: 1.3cqw; color: #6b4a2b; }
+.about-count { margin-left: auto; align-self: flex-start; font-family: "Samdan Evil", var(--font); font-size: 1.8cqw; color: #8a5a2b; }
+.about-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 1.1cqw 1.8cqw; margin: 0; }
+.about-item { grid-column: span 2; min-width: 0; }
+.about-item.wide { grid-column: span 6; }
+.about-item.half { grid-column: span 3; }
+.about-item dt { font-family: "Samdan Evil", var(--font); font-size: 1.45cqw; letter-spacing: .05cqw; text-transform: uppercase; color: #8a4b1c; margin-bottom: .25cqw; }
+.about-item dd { margin: 0; font-family: Arial, Helvetica, sans-serif; font-size: 1.3cqw; line-height: 1.35; overflow-wrap: anywhere; }
+.about-none { font-family: Arial, Helvetica, sans-serif; font-size: 1.5cqw; margin: 0; }
+.about-arrow {
+  position: absolute; top: 50%; transform: translateY(-50%); width: 5cqw; height: 5cqw; border-radius: 50%;
+  border: .3cqw solid #4e2f17; background: #f7e3bd; color: #4e2f17; font-size: 3.4cqw; line-height: 1; cursor: pointer;
+  display: grid; place-items: center; padding: 0 0 .4cqw;
+}
+.about-arrow.left { left: 3cqw; }
+.about-arrow.right { right: 3cqw; }
+.about-arrow:hover, .about-arrow:focus-visible { background: #fff1d6; outline: none; box-shadow: 0 0 0 .3cqw var(--purple); }
+@media (prefers-reduced-motion: reduce) { .dock-overlay, .about-card { animation: none; } }

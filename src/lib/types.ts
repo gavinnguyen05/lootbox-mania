@@ -89,6 +89,18 @@ export interface CandyEvent {
   players: { player_id: string; candy_before: number; candy_after: number }[];
 }
 
+/** One player's answers from the sign-up form ("about me" card). */
+export interface AboutMe {
+  formName: string;
+  age: string;
+  color: string;
+  food: string;
+  fact: string;
+  spend: string;
+  horse: string;
+  notWin: string;
+}
+
 export interface IslandRound {
   id: number;
   round: number;

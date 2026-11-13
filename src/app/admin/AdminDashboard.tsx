@@ -7,7 +7,7 @@
 import { useMemo, useRef, useState, useTransition } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import type { AdminAction, AdminPlayer, CandyEvent, IslandState, Item, Neighbor, Roll, RollResult, TreatRow } from "@/lib/types";
+import type { AboutMe, AdminAction, AdminPlayer, CandyEvent, IslandState, Item, Neighbor, Roll, RollResult, TreatRow } from "@/lib/types";
 import { RARITY, CHECKLIST_RARITIES } from "@/lib/rarity";
 import { ALMOST_THERE, buildRows, missingNames, progress } from "@/lib/progress";
 import { displayName } from "@/lib/names";
@@ -54,6 +54,8 @@ interface Props {
   treatsUsed: Record<string, number>;
   candyEvents: CandyEvent[];
   island: IslandState;
+  /** Sign-up form answers by player id (admin only). */
+  about: { byPlayer: Record<string, AboutMe>; missing: string[] };
 }
 
 type Shared = {
@@ -109,7 +111,7 @@ export default function AdminDashboard(props: Props) {
             treats={props.treats} treatsUsed={props.treatsUsed} setFlash={setFlash} />
         )}
         {tab === "events" && <EventsTab players={props.players} events={props.candyEvents} setFlash={setFlash} />}
-        {tab === "island" && <IslandTab players={props.players} island={props.island} setFlash={setFlash} />}
+        {tab === "island" && <IslandTab players={props.players} island={props.island} about={props.about} setFlash={setFlash} />}
         {tab === "players" && <PlayersTab {...shared} players={props.players} selected={selected} onSelect={setSelectedId} />}
         {tab === "activity" && <ActivityTab {...shared} players={props.players} actions={props.actions} />}
       </div>
