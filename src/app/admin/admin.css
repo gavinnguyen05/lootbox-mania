@@ -500,18 +500,17 @@
 /* Spiral binding: rings hooked through holes along the left edge. */
 .nb-rings { position: absolute; left: -1.6cqw; top: 1.6cqw; bottom: 1.6cqw; width: 3.6cqw; display: flex; flex-direction: column; justify-content: space-between; }
 .nb-rings i { position: relative; display: block; height: 1.3cqw; }
-.nb-rings i::before {
-  content: ""; position: absolute; left: 0; top: 0; width: 3.3cqw; height: 1.3cqw;
-  border: .32cqw solid #6f6f74; border-right-color: transparent; border-radius: 50%; transform: rotate(-12deg);
+.nb-rings i::before { /* the metal loop, level, its open end entering the hole */
+  content: ""; position: absolute; left: 0; top: 0; width: 3cqw; height: 1.3cqw; box-sizing: border-box;
+  border: .32cqw solid #6f6f74; border-right-color: transparent; border-radius: 50%;
   box-shadow: inset 0 .12cqw 0 rgba(255, 255, 255, .45);
 }
-.nb-rings i::after {
-  content: ""; position: absolute; left: 2.35cqw; top: .25cqw; width: .8cqw; height: .8cqw; border-radius: 50%;
+.nb-rings i::after { /* the punched hole, centred on the loop's end */
+  content: ""; position: absolute; left: 2.45cqw; top: .25cqw; width: .8cqw; height: .8cqw; border-radius: 50%;
   background: #2a2117; box-shadow: inset 0 .1cqw .15cqw rgba(0, 0, 0, .6);
 }
-/* Binder clip at the top. */
-.nb-clip { position: absolute; top: -1.6cqw; right: 22%; width: 6.4cqw; height: 2.6cqw; border-radius: .4cqw; background: #2e2e33; box-shadow: inset 0 -.3cqw 0 #1c1c20; }
-.nb-clip::before { content: ""; position: absolute; left: 1.1cqw; right: 1.1cqw; bottom: 1.6cqw; height: 2.1cqw; border: .32cqw solid #8b8b92; border-bottom: 0; border-radius: 1.2cqw 1.2cqw 0 0; }
+/* Binder clip at the top (clip.png): its jaws bite over the page's top edge. */
+.nb-clip { position: absolute; top: -6.4cqw; right: 19%; width: 9cqw; height: auto; z-index: 2; pointer-events: none; filter: drop-shadow(0 .25cqw .2cqw rgba(0, 0, 0, .35)); }
 
 /* Masking tape strips behind headings, with torn ends. */
 .about-real, .about-item dt, .about-nav {
