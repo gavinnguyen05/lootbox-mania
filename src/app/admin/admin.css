@@ -369,6 +369,8 @@
   transition: transform .15s ease, left 1.2s cubic-bezier(.4, 0, .2, 1), top 1.2s cubic-bezier(.4, 0, .2, 1), opacity .8s ease;
 }
 .stage-seat.gone { opacity: 0; pointer-events: none; }
+/* A safe player leaving mid-ceremony: hold greyed a beat after the marshmallow lands, then fade. */
+.stage-seat.vanish { transition: opacity .7s ease .45s, transform .15s ease; }
 .stage-seat[aria-disabled="true"] { cursor: default; }
 .stage-seat .avatar { width: 100%; height: auto; aspect-ratio: 1; box-shadow: 0 .4cqw .9cqw rgba(0, 0, 0, .45); }
 .stage-seat .avatar-fallback { font-size: 3cqw; }

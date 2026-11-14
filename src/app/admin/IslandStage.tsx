@@ -23,6 +23,14 @@ const MARSHMALLOW = "/assets/marshmallow.png";
  * Stumps the final few gather on, by how many are left: a 1-2-3 triangle in the
  * middle for 6 (indexes into STUMPS), smaller shapes for fewer.
  */
+/**
+ * Which stumps fill first (indexes into STUMPS): middle row, then front, then back,
+ * each from the centre out, so a smaller group sits together with no scattered gaps.
+ */
+const FILL_ORDER = [7, 8, 6, 9, 5, 10, 13, 12, 14, 11, 15, 2, 1, 3, 0, 4];
+/** In each ceremony, the first few safe players stay (greyed); after that, safe players leave their stump. */
+const KEEP_SAFE_VISIBLE = 3;
+
 const FINAL_FEW_STUMPS: Record<number, number[]> = {
   6: [2, 7, 8, 12, 13, 14],
   5: [7, 8, 12, 13, 14],
@@ -90,8 +98,11 @@ export default function IslandStage({ players, outIds, atRiskIds, safeIds, lates
     });
   }, [active]);
 
-  const seated = order.slice(0, STUMPS.length);
-  const unseated = order.length - seated.length;
+  // Only players still on the island get a stump; anyone out in an earlier round is gone from the stage.
+  const onIslandIds = new Set(active.filter((p) => !outIds.has(p.id)).map((p) => p.id));
+  const waiting = order.filter((id) => onIslandIds.has(id));
+  const seated = waiting.slice(0, STUMPS.length);
+  const unseated = waiting.length - seated.length;
   // Final few (set by the animation): they gather in the middle, everyone else fades away.
   const [finalFew, setFinalFew] = useState<string[] | null>(null);
   const seatOf = (id: string) => {
@@ -100,7 +111,7 @@ export default function IslandStage({ players, outIds, atRiskIds, safeIds, lates
       const slots = FINAL_FEW_STUMPS[finalFew.length];
       if (i >= 0 && slots) return STUMPS[slots[i]];
     }
-    return STUMPS[seated.indexOf(id)];
+    return STUMPS[FILL_ORDER[seated.indexOf(id)]];
   };
 
   // In this ceremony: everyone still on the island (not out in an earlier round), including the at-risk ones.
@@ -111,6 +122,9 @@ export default function IslandStage({ players, outIds, atRiskIds, safeIds, lates
   const toGive = onIsland.length - keep;
   const left = toGive - given;
   const showCountdown = Number.isInteger(keep) && keep >= 1 && toGive > 0 && left >= 1 && left <= COUNTDOWN_FROM;
+
+  // Marshmallow order this ceremony (Sets keep insertion order).
+  const safeOrder = [...safe].filter((id) => onIslandIds.has(id));
 
   function give(ids: string[], stagger = 0) {
     const fresh = ids.filter((id) => !safe.has(id) && !outIds.has(id));
@@ -258,8 +272,10 @@ export default function IslandStage({ players, outIds, atRiskIds, safeIds, lates
           const grey = out || (isSafe && !tossing.has(id));
           // Greyed players don't get the hover focus, except while their marshmallow is in the air. None while the sequence runs.
           const focused = !running && hover === id && (!grey || tossing.has(id));
-          const gone = finalFew !== null && !finalFew.includes(id);
-          const cls = ["stage-seat", grey && "grey", focused && "focus", spot && "spot", gone && "gone"].filter(Boolean).join(" ");
+          // Past the first few marshmallows, a safe player leaves the stage once theirs lands.
+          const vanish = isSafe && !tossing.has(id) && safeOrder.indexOf(id) >= KEEP_SAFE_VISIBLE;
+          const gone = vanish || (finalFew !== null && !finalFew.includes(id));
+          const cls = ["stage-seat", grey && "grey", focused && "focus", spot && "spot", gone && "gone", vanish && "vanish"].filter(Boolean).join(" ");
           return (
             <button key={id} type="button" className={cls}
               style={{ left: `${x}%`, top: `${y}%`, width: `${AVATAR_W}%`, zIndex: focused ? 100 : Math.round(y) } as React.CSSProperties}
