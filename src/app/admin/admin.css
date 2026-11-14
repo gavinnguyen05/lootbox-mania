@@ -485,31 +485,58 @@
 .dock-seat .avatar { width: 100%; height: auto; aspect-ratio: 1; box-shadow: 0 .4cqw .9cqw rgba(0, 0, 0, .5); }
 .dock-seat .avatar-fallback { font-size: 3cqw; }
 
-/* About-me card on the right side of the scene, beside the boat. Samdan Evil for headers, Arial for answers. */
-.dock-overlay { position: absolute; top: 0; bottom: 0; right: 2.5cqw; width: 50cqw; z-index: 50; display: flex; align-items: center; pointer-events: none; }
+/* About-me card: a notebook page on the right side of the scene, beside the boat.
+   Samdan Evil on masking-tape strips for headers, Arial for answers. All drawn in CSS. */
+.dock-overlay { position: absolute; top: 0; bottom: 0; right: 3cqw; width: 49cqw; z-index: 50; display: flex; align-items: center; pointer-events: none; }
 .about-card {
-  pointer-events: auto; width: 100%; max-height: 52cqw; overflow: hidden; padding: 1.8cqw 2cqw 1.9cqw;
-  background: #f7e3bd; color: #2a1a0e; border: .45cqw solid #4e2f17; border-radius: 1.4cqw;
-  box-shadow: 0 1cqw 0 rgba(0, 0, 0, .35), 0 0 3cqw rgba(0, 0, 0, .35); animation: about-in .35s ease-out both;
+  --paper: #f8e7c6; --ink: #2b1a0d; --edge: #3a2414; --tape: #e2bf87;
+  position: relative; pointer-events: auto; width: 100%; max-height: 52cqw; padding: 1.7cqw 1.9cqw 1.6cqw 4.4cqw;
+  background: var(--paper); color: var(--ink); border: .38cqw solid var(--edge); border-radius: .5cqw .9cqw .9cqw .5cqw;
+  box-shadow: .6cqw .6cqw 0 -.05cqw #e8d2a8, .6cqw .6cqw 0 .3cqw var(--edge), 0 1.2cqw 2.5cqw rgba(0, 0, 0, .45);
+  animation: about-in .35s ease-out both;
 }
-@keyframes about-in { from { transform: translateX(6cqw); opacity: 0; } to { transform: none; opacity: 1; } }
-.about-head { display: flex; align-items: center; gap: 1.3cqw; padding-bottom: .9cqw; margin-bottom: 1cqw; border-bottom: .25cqw dashed #b78a55; }
-.about-head .avatar { width: 6cqw; height: 6cqw; flex: none; box-shadow: 0 0 0 .3cqw #4e2f17; }
-.about-head .avatar-fallback { font-size: 2.6cqw; }
-.about-name { margin: 0; font-family: "Samdan Evil", var(--font); font-size: 3.4cqw; line-height: 1; color: #2a1a0e; overflow-wrap: anywhere; }
-.about-real { margin: .3cqw 0 0; font-family: Arial, Helvetica, sans-serif; font-size: 1.15cqw; color: #6b4a2b; }
-.about-nav { margin-left: auto; align-self: flex-start; display: flex; align-items: center; gap: .6cqw; }
-.about-count { font-family: "Samdan Evil", var(--font); font-size: 1.6cqw; color: #8a5a2b; white-space: nowrap; }
-.about-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: .9cqw 1.4cqw; margin: 0; }
+@keyframes about-in { from { transform: translateX(6cqw) rotate(1.5deg); opacity: 0; } to { transform: none; opacity: 1; } }
+
+/* Spiral binding: rings hooked through holes along the left edge. */
+.nb-rings { position: absolute; left: -1.6cqw; top: 1.6cqw; bottom: 1.6cqw; width: 3.6cqw; display: flex; flex-direction: column; justify-content: space-between; }
+.nb-rings i { position: relative; display: block; height: 1.3cqw; }
+.nb-rings i::before {
+  content: ""; position: absolute; left: 0; top: 0; width: 3.3cqw; height: 1.3cqw;
+  border: .32cqw solid #6f6f74; border-right-color: transparent; border-radius: 50%; transform: rotate(-12deg);
+  box-shadow: inset 0 .12cqw 0 rgba(255, 255, 255, .45);
+}
+.nb-rings i::after {
+  content: ""; position: absolute; left: 2.35cqw; top: .25cqw; width: .8cqw; height: .8cqw; border-radius: 50%;
+  background: #2a2117; box-shadow: inset 0 .1cqw .15cqw rgba(0, 0, 0, .6);
+}
+/* Binder clip at the top. */
+.nb-clip { position: absolute; top: -1.6cqw; right: 22%; width: 6.4cqw; height: 2.6cqw; border-radius: .4cqw; background: #2e2e33; box-shadow: inset 0 -.3cqw 0 #1c1c20; }
+.nb-clip::before { content: ""; position: absolute; left: 1.1cqw; right: 1.1cqw; bottom: 1.6cqw; height: 2.1cqw; border: .32cqw solid #8b8b92; border-bottom: 0; border-radius: 1.2cqw 1.2cqw 0 0; }
+
+/* Masking tape strips behind headings, with torn ends. */
+.about-real, .about-item dt, .about-nav {
+  background: var(--tape); clip-path: polygon(1.5% 6%, 98% 0, 100% 45%, 97.5% 100%, 0 94%, 1% 50%);
+}
+.about-head { display: flex; align-items: center; gap: 1.1cqw; padding-bottom: .7cqw; margin-bottom: .8cqw; border-bottom: .22cqw dashed var(--edge); }
+.about-head .avatar { width: 5.6cqw; height: 5.6cqw; flex: none; box-shadow: 0 0 0 .32cqw var(--edge); }
+.about-head .avatar-fallback { font-size: 2.4cqw; }
+.about-name { margin: 0; font-family: "Samdan Evil", var(--font); font-size: 4cqw; line-height: .95; color: var(--ink); overflow-wrap: anywhere; }
+.about-real { display: inline-block; margin: .35cqw 0 0; padding: .15cqw .9cqw .15cqw .6cqw; font-family: Arial, Helvetica, sans-serif; font-size: 1.15cqw; color: var(--ink); }
+.about-nav { margin-left: auto; align-self: flex-start; display: flex; align-items: center; gap: .5cqw; padding: .3cqw .7cqw; }
+.about-count { font-family: "Samdan Evil", var(--font); font-size: 1.6cqw; color: var(--ink); white-space: nowrap; }
+.about-arrow {
+  width: 2.7cqw; height: 2.7cqw; border-radius: 50%; border: .24cqw solid var(--ink); background: transparent; color: var(--ink);
+  font-size: 1.9cqw; line-height: 1; cursor: pointer; display: grid; place-items: center; padding: 0 0 .2cqw;
+}
+.about-arrow:hover, .about-arrow:focus-visible { background: rgba(255, 255, 255, .5); outline: none; box-shadow: 0 0 0 .22cqw var(--purple); }
+.about-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: .65cqw 1.2cqw; margin: 0; }
 .about-item { grid-column: span 2; min-width: 0; }
 .about-item.wide { grid-column: span 6; }
 .about-item.half { grid-column: span 3; }
-.about-item dt { font-family: "Samdan Evil", var(--font); font-size: 1.25cqw; letter-spacing: .04cqw; text-transform: uppercase; color: #8a4b1c; margin-bottom: .2cqw; }
-.about-item dd { margin: 0; font-family: Arial, Helvetica, sans-serif; font-size: 1.12cqw; line-height: 1.35; overflow-wrap: anywhere; }
-.about-none { font-family: Arial, Helvetica, sans-serif; font-size: 1.3cqw; margin: 0; }
-.about-arrow {
-  width: 3.2cqw; height: 3.2cqw; border-radius: 50%; border: .25cqw solid #4e2f17; background: #fff1d6; color: #4e2f17;
-  font-size: 2.2cqw; line-height: 1; cursor: pointer; display: grid; place-items: center; padding: 0 0 .25cqw;
+.about-item dt {
+  display: inline-block; max-width: 100%; padding: .12cqw .9cqw .1cqw .55cqw; margin-bottom: .2cqw;
+  font-family: "Samdan Evil", var(--font); font-size: 1.6cqw; line-height: 1.15; letter-spacing: .03cqw; text-transform: uppercase; color: var(--ink);
 }
-.about-arrow:hover, .about-arrow:focus-visible { background: #fff; outline: none; box-shadow: 0 0 0 .25cqw var(--purple); }
+.about-item dd { margin: 0 0 0 .5cqw; font-family: Arial, Helvetica, sans-serif; font-size: 1.22cqw; line-height: 1.3; overflow-wrap: anywhere; }
+.about-none { font-family: Arial, Helvetica, sans-serif; font-size: 1.3cqw; margin: 0; }
 @media (prefers-reduced-motion: reduce) { .dock-overlay, .about-card { animation: none; } }

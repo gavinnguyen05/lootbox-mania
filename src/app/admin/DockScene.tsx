@@ -83,6 +83,9 @@ export default function DockScene({ players, eliminatedIds, about }: {
         {open && player && (
           <div className="dock-overlay">
             <article key={current} className="about-card" aria-live="polite" aria-label={`About ${islandName(player)}`}>
+              {/* Notebook trim: spiral rings down the left, binder clip on top. Decorative only. */}
+              <span className="nb-rings" aria-hidden>{Array.from({ length: 9 }, (_, i) => <i key={i} />)}</span>
+              <span className="nb-clip" aria-hidden />
               <header className="about-head">
                 <Avatar src={player.discord_avatar_url} name={islandName(player)} size={128} />
                 <div>
