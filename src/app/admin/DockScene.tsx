@@ -62,10 +62,9 @@ export default function DockScene({ players, eliminatedIds, about }: {
           )}
         </div>
       </div>
-      <p className="muted small stage-hint">
-        {count === 0 ? "Run a Candy Island draw: its left-over players board the boat." : "The latest draw's left-over players. Use ← → to switch, Esc to hide."}
-        {about.missing.length > 0 && <span> No form answers matched yet for: {about.missing.join(", ")}.</span>}
-      </p>
+      {about.missing.length > 0 && (
+        <p className="error small stage-hint" role="alert">No form answers matched yet for: {about.missing.join(", ")}.</p>
+      )}
 
       <div className="stage dock-stage">
         <Image src={DOCK.src} alt="" width={DOCK.width} height={DOCK.height} className="stage-bg" />

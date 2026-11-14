@@ -28,8 +28,8 @@ const MARSHMALLOW = "/assets/marshmallow.png";
  * each from the centre out, so a smaller group sits together with no scattered gaps.
  */
 const FILL_ORDER = [7, 8, 6, 9, 5, 10, 13, 12, 14, 11, 15, 2, 1, 3, 0, 4];
-/** In each ceremony, the first few safe players stay (greyed); after that, safe players leave their stump. */
-const KEEP_SAFE_VISIBLE = 3;
+/** How many safe players stay (greyed) before safe players start leaving their stump. 0 = everyone leaves right away. */
+const KEEP_SAFE_VISIBLE = 0;
 
 const FINAL_FEW_STUMPS: Record<number, number[]> = {
   6: [2, 7, 8, 12, 13, 14],
@@ -247,11 +247,12 @@ export default function IslandStage({ players, outIds, atRiskIds, safeIds, lates
         {seq.error && <p className="error fs-error" role="alert">Animation stopped: {seq.error}</p>}
         {seq.status === "done" && <span className="fs-done">Animation finished. Final {atRiskIds.length} at risk.</span>}
       </div>
-      <p className="muted small stage-hint">
-        Click someone to toss them a marshmallow (click again to take it back). Players out from earlier rounds are greyed.
-        {status === "error" && <span className="error"> Couldn&apos;t make the image. Try again.</span>}
-        {unseated > 0 && <span className="error"> {unseated} player{unseated === 1 ? "" : "s"} didn&apos;t fit: there are only 16 stumps.</span>}
-      </p>
+      {(status === "error" || unseated > 0) && (
+        <p className="error small stage-hint" role="alert">
+          {status === "error" && "Couldn't make the image. Try again. "}
+          {unseated > 0 && `${unseated} player${unseated === 1 ? "" : "s"} didn't fit: there are only 16 stumps.`}
+        </p>
+      )}
 
       <div ref={fsRef} className={`stage-fs${fullscreen ? " is-full" : ""}`}>
       {fullscreen && !running && (
