@@ -521,7 +521,9 @@
 .about-head { display: flex; align-items: center; gap: 1.1cqw; padding-bottom: .7cqw; margin-bottom: .8cqw; border-bottom: .22cqw dashed var(--edge); }
 .about-head .avatar { width: 5.6cqw; height: 5.6cqw; flex: none; box-shadow: 0 0 0 .32cqw var(--edge); }
 .about-head .avatar-fallback { font-size: 2.4cqw; }
-.about-name { margin: 0; font-family: "Samdan Evil", var(--font); font-size: 4cqw; line-height: .95; color: var(--ink); overflow-wrap: anywhere; }
+.about-who { position: relative; flex: 1; min-width: 0; }
+.about-name { margin: 0; font-family: "Samdan Evil", var(--font); font-size: 4cqw; line-height: .95; color: var(--ink); white-space: nowrap; overflow: hidden; }
+.about-name-probe { position: absolute; left: 0; top: 0; visibility: hidden; overflow: visible; pointer-events: none; }
 .about-real { display: inline-block; margin: .35cqw 0 0; padding: .15cqw .9cqw .15cqw .6cqw; font-family: Arial, Helvetica, sans-serif; font-size: 1.15cqw; color: var(--ink); }
 .about-nav { margin-left: auto; align-self: flex-start; display: flex; align-items: center; gap: .5cqw; padding: .3cqw .7cqw; }
 .about-count { font-family: "Samdan Evil", var(--font); font-size: 1.6cqw; color: var(--ink); white-space: nowrap; }

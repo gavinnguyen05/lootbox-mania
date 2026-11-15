@@ -3,12 +3,42 @@
 // "Reveal player info" shows an about-me card (their sign-up form answers) over
 // the scene; arrows switch between them, Hide puts it away.
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import type { AboutMe, AdminPlayer } from "@/lib/types";
 import Avatar from "@/components/Avatar";
 import { islandName } from "./islandNames";
 import { AVATAR_W } from "./islandLayout";
+
+const NAME_MAX = 4; // cqw: biggest the card name gets
+
+/**
+ * The player's name, as big as fits on one line (long names shrink instead of
+ * breaking mid-word). A hidden copy at full size is measured against the room.
+ */
+function FitName({ name }: { name: string }) {
+  const shown = useRef<HTMLHeadingElement>(null);
+  const probe = useRef<HTMLSpanElement>(null);
+  const [size, setSize] = useState(NAME_MAX);
+  useLayoutEffect(() => {
+    let cancelled = false;
+    const fit = () => {
+      if (cancelled || !shown.current || !probe.current) return;
+      const room = shown.current.clientWidth;
+      const natural = probe.current.offsetWidth;
+      setSize(natural > room ? Math.max(1.6, NAME_MAX * (room / natural) * 0.97) : NAME_MAX);
+    };
+    fit();
+    document.fonts?.ready.then(fit); // re-fit once Samdan Evil has loaded
+    return () => { cancelled = true; };
+  }, [name]);
+  return (
+    <>
+      <span ref={probe} className="about-name about-name-probe" style={{ fontSize: `${NAME_MAX}cqw` }} aria-hidden>{name}</span>
+      <h4 ref={shown} className="about-name" style={{ fontSize: `${size.toFixed(2)}cqw` }}>{name}</h4>
+    </>
+  );
+}
 
 const DOCK = { src: "/assets/dock.png", width: 1672, height: 941 };
 /** Where players stand on the boat deck (feet, % of the picture), in front of the cabin. */
@@ -87,8 +117,8 @@ export default function DockScene({ players, eliminatedIds, about }: {
               <Image src="/assets/clip.png" alt="" width={1254} height={1254} className="nb-clip" />
               <header className="about-head">
                 <Avatar src={player.discord_avatar_url} name={islandName(player)} size={128} />
-                <div>
-                  <h4 className="about-name">{islandName(player)}</h4>
+                <div className="about-who">
+                  <FitName name={islandName(player)} />
                   {info && info.formName.toLowerCase() !== islandName(player).toLowerCase() && (
                     <p className="about-real">{info.formName}</p>
                   )}
