@@ -66,11 +66,14 @@ export interface SequenceInput {
   atRisk: string[];
   /** Who has a marshmallow right now (the stage's real state). */
   safe: Set<string>;
+  /** Immune this round: revealed first, never at risk. */
+  immuneId?: string | null;
   nameOf: (id: string) => string;
 }
 
 /** Why the sequence can't start right now, or null if it can. */
-export function validateSequence({ participants, atRisk, safe, nameOf }: SequenceInput): string | null {
+export function validateSequence({ participants, atRisk, safe, nameOf, immuneId }: SequenceInput): string | null {
+  if (immuneId && atRisk.includes(immuneId)) return `${nameOf(immuneId)} has immunity but is listed at risk. Undo the round and draw again.`;
   if (atRisk.length === 0) return "Run a Candy Island draw first: its left-over players are the ones at risk.";
   if (atRisk.length !== FINAL_AT_RISK) {
     return `The latest draw left ${atRisk.length} player${atRisk.length === 1 ? "" : "s"} at risk; the animation needs exactly ${FINAL_AT_RISK}.`;
@@ -156,7 +159,11 @@ export function useFinalSequence(
 
     const atRisk = new Set(first.atRisk);
     // Randomize ONLY the order of the safe campers. The at-risk ones are never in this list.
-    const reveals = shuffled(first.participants.filter((id) => !first.safe.has(id) && !atRisk.has(id)));
+    // The immune camper (if still waiting) is always revealed first.
+    const order = shuffled(first.participants.filter((id) => !first.safe.has(id) && !atRisk.has(id)));
+    const reveals = first.immuneId && order.includes(first.immuneId)
+      ? [first.immuneId, ...order.filter((id) => id !== first.immuneId)]
+      : order;
 
     try {
       // 3, 2, 1

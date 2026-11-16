@@ -45,6 +45,7 @@ const GAME_ERRORS: Record<string, string> = {
   PLAYER_NOT_ESCAPED: "Only escaped players can trick-or-treat.",
   NO_TREATS_LEFT: "No treats left in this window.",
   NEIGHBOR_NOT_FOUND: "That neighbor isn't set up.",
+  PLAYER_ALREADY_OUT: "That player is already out, so they can't have immunity.",
   INVALID_REMAINING: "Pick a number from 1 up to one less than the players still on the island.",
   INVALID_PLAYERS: "Pick at least one player (each only once).",
   CANDY_BELOW_ZERO: "That would put someone below 0 candy. Nobody was changed.",
@@ -300,6 +301,19 @@ export async function islandRun(remaining: unknown, requestId: unknown): Promise
     return { ok: true, round: r.round, picked: r.picked, remaining: r.remaining };
   } catch (e) {
     return fail(e, "Couldn't run the draw. Try again.");
+  }
+}
+
+/** Immunity for the next draw (null clears it). The draw can never leave this player over. */
+export async function islandSetImmunity(playerId: unknown): Promise<IslandActionResult> {
+  try {
+    await requireAdmin();
+    const id = playerId === null || playerId === "" ? null : v.uuid(playerId, "player");
+    await rpc("island_set_immunity", { p_player_id: id });
+    refreshPages();
+    return { ok: true, notice: id ? "Immunity set for the next draw." : "Immunity cleared." };
+  } catch (e) {
+    return fail(e);
   }
 }
 

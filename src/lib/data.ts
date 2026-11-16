@@ -105,13 +105,13 @@ export async function getAdminData(windowKey: string) {
 
 /** Candy Island: the current game and its rounds so far. Admin only. */
 async function getIslandState(db: SupabaseClient): Promise<IslandState> {
-  const meta = must(await db.from("island_meta").select("season").eq("id", 1).maybeSingle()) as { season: number } | null;
+  const meta = must(await db.from("island_meta").select("season, immune_id").eq("id", 1).maybeSingle()) as { season: number; immune_id: string | null } | null;
   const season = meta?.season ?? 1;
   const rounds: IslandRound[] = must(
-    await db.from("island_rounds").select("id, round, picked, remaining, created_at")
+    await db.from("island_rounds").select("id, round, picked, remaining, immune_id, created_at")
       .eq("season", season).eq("undone", false).order("id"),
   );
-  return { season, rounds };
+  return { season, rounds, immunePending: meta?.immune_id ?? null };
 }
 
 export function byId<T extends { id: string }>(rows: T[]): Record<string, T> {

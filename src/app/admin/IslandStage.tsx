@@ -45,12 +45,14 @@ const ASPECT = BG.height / BG.width;
 const COUNTDOWN_FROM = 3;
 
 
-export default function IslandStage({ players, outIds, atRiskIds, safeIds, latestRound, toRemain, onLockChange }: {
+export default function IslandStage({ players, outIds, atRiskIds, immuneId, safeIds, latestRound, toRemain, onLockChange }: {
   players: AdminPlayer[];
   /** Out in an EARLIER round: greyed automatically, no marshmallow. */
   outIds: Set<string>;
   /** Predetermined at risk this round (the latest draw's left-overs). Not greyed: they wait to the end. */
   atRiskIds: string[];
+  /** Immune this round: shown holding the idol, revealed first in the animation. */
+  immuneId: string | null;
   /** Drawn (safe) in the latest round, for the quick "give all" button. */
   safeIds: string[];
   latestRound: number | null;
@@ -149,6 +151,7 @@ export default function IslandStage({ players, outIds, atRiskIds, safeIds, lates
     participants: onIsland.map((p) => p.id).filter((id) => seatedSet.has(id)),
     atRisk: atRiskIds,
     safe,
+    immuneId,
     nameOf: (id) => (byId[id] ? islandName(byId[id]) : "A removed player"),
   };
   const giveLatest = useRef(give);
@@ -276,16 +279,18 @@ export default function IslandStage({ players, outIds, atRiskIds, safeIds, lates
           // Past the first few marshmallows, a safe player leaves the stage once theirs lands.
           const vanish = isSafe && !tossing.has(id) && safeOrder.indexOf(id) >= KEEP_SAFE_VISIBLE;
           const gone = vanish || (finalFew !== null && !finalFew.includes(id));
-          const cls = ["stage-seat", grey && "grey", focused && "focus", spot && "spot", gone && "gone", vanish && "vanish"].filter(Boolean).join(" ");
+          const immune = id === immuneId;
+          const cls = ["stage-seat", grey && "grey", focused && "focus", spot && "spot", gone && "gone", vanish && "vanish", immune && "immune"].filter(Boolean).join(" ");
           return (
             <button key={id} type="button" className={cls}
               style={{ left: `${x}%`, top: `${y}%`, width: `${AVATAR_W}%`, zIndex: focused ? 100 : Math.round(y) } as React.CSSProperties}
               onMouseEnter={() => !capturing && !running && setHover(id)} onFocus={() => !running && setHover(id)}
               onMouseLeave={() => setHover((h) => (h === id ? null : h))} onBlur={() => setHover((h) => (h === id ? null : h))}
               onClick={() => toggle(id)} aria-pressed={isSafe} aria-disabled={out || running}
-              aria-label={`${islandName(p)}${out ? ", out" : isSafe ? ", safe" : ""}${out ? "" : isSafe ? ". Click to take back the marshmallow" : ". Click to toss a marshmallow"}`}>
-              <span className="stage-name">{islandName(p)}</span>
+              aria-label={`${islandName(p)}${immune ? ", immune" : ""}${out ? ", out" : isSafe ? ", safe" : ""}${out ? "" : isSafe ? ". Click to take back the marshmallow" : ". Click to toss a marshmallow"}`}>
+              <span className="stage-name">{immune && <span aria-hidden>🗿 </span>}{islandName(p)}</span>
               <Avatar src={p.discord_avatar_url} name={islandName(p)} size={128} />
+              {immune && <Image src="/assets/idol.png" alt="Immunity idol" width={1086} height={1448} className="stage-idol" />}
               {isSafe && (
                 <Image src={MARSHMALLOW} alt="" width={64} height={68}
                   className={`stage-mallow${tossing.has(id) ? " toss" : ""}`}
@@ -295,7 +300,8 @@ export default function IslandStage({ players, outIds, atRiskIds, safeIds, lates
           );
         })}
 
-        <FinalSequenceOverlay scene={seq.scene} name={seq.scene.camperId ? live.current.nameOf(seq.scene.camperId) : ""} />
+        <FinalSequenceOverlay scene={seq.scene} name={seq.scene.camperId ? live.current.nameOf(seq.scene.camperId) : ""}
+          immune={!!immuneId && seq.scene.camperId === immuneId} />
 
         {showCountdown && (
           <p className="stage-countdown" role="status" key={left}>

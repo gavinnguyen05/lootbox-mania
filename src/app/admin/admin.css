@@ -461,6 +461,7 @@
   font-family: "Samdan Evil", var(--font); line-height: 1; text-align: center; white-space: nowrap; overflow: hidden;
   color: #24130a;
 }
+.fs-tag-card:has(.fs-immune-stamp) .fs-tag-name { top: 45%; }
 .fs-tag-name-probe { position: absolute; left: 0; top: 0; visibility: hidden; white-space: nowrap; font-family: "Samdan Evil", var(--font); line-height: 1; pointer-events: none; }
 .stage.capturing .fs-tag-move, .stage.capturing .fs-arm, .stage.capturing .fs-dim, .stage.capturing .fs-tag-card { transition: none !important; }
 
@@ -543,3 +544,28 @@
 .about-item dd { margin: 0 0 0 .5cqw; font-family: Arial, Helvetica, sans-serif; font-size: 1.22cqw; line-height: 1.3; overflow-wrap: anywhere; }
 .about-none { font-family: Arial, Helvetica, sans-serif; font-size: 1.3cqw; margin: 0; }
 @media (prefers-reduced-motion: reduce) { .dock-overlay, .about-card { animation: none; } }
+
+/* ---------- Immunity (idol.png) ---------- */
+.isl-immunity { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 4px 12px; padding: 8px 10px; border: 1px solid #6b4a24; border-radius: 10px; background: #1d150c; }
+.isl-immunity .isl-idol { grid-row: span 2; width: 40px; height: auto; }
+.isl-immunity .field { margin: 0; }
+.isl-immunity select { width: 100%; max-width: 260px; }
+.isl-immunity p { margin: 0; }
+.isl-immune-tag { color: #f0c46a; border-color: #6b4a24; }
+.isl-immune-badge { margin-left: auto; flex: none; }
+
+/* On the stage: the idol stands beside the immune camper, with a warm glow. */
+.stage-seat.immune .avatar { box-shadow: 0 0 0 .3cqw #f0c46a, 0 0 1.6cqw .3cqw rgba(255, 190, 80, .65), 0 .4cqw .9cqw rgba(0, 0, 0, .45); }
+.stage-idol { position: absolute; left: -46%; bottom: -6%; width: 52%; height: auto; pointer-events: none; transform: rotate(-6deg);
+              filter: drop-shadow(0 .3cqw .35cqw rgba(0, 0, 0, .5)); }
+
+/* In the animation: the immune camper's tag is stamped IMMUNITY with the idol beside it. */
+.fs-immune-stamp {
+  position: absolute; left: 61%; top: 73%; transform: translate(-50%, -50%) rotate(-4deg); white-space: nowrap;
+  font-family: "Samdan Evil", var(--font); font-size: 1.5cqw; line-height: 1; letter-spacing: .1cqw; text-transform: uppercase;
+  color: #8a1d12; border: .22cqw solid #8a1d12; border-radius: .4cqw; padding: .15cqw .7cqw; opacity: .9;
+}
+.fs-tag-idol { position: absolute; right: -19%; bottom: -14%; width: 30%; height: auto; transform: rotate(8deg);
+               filter: drop-shadow(0 .4cqw .5cqw rgba(0, 0, 0, .5)); animation: fs-idol-in .4s ease-out both; }
+@keyframes fs-idol-in { from { opacity: 0; transform: translateY(2cqw) rotate(8deg) scale(.8); } to { opacity: 1; transform: rotate(8deg); } }
+@media (prefers-reduced-motion: reduce) { .fs-tag-idol { animation: none; } }

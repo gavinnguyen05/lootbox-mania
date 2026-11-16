@@ -42,7 +42,7 @@ function TagName({ name }: { name: string }) {
 
 // Tag art: tag-back.png is the back (rope on the right; new file name so cached
 // copies of the old back aren't shown), tag-top.png is the front (rope on the left).
-export default function FinalSequenceOverlay({ scene, name }: { scene: SequenceScene; name: string }) {
+export default function FinalSequenceOverlay({ scene, name, immune }: { scene: SequenceScene; name: string; immune: boolean }) {
   return (
     <>
       <div className={`fs-dim${scene.dim ? " on" : ""}`} aria-hidden />
@@ -61,6 +61,12 @@ export default function FinalSequenceOverlay({ scene, name }: { scene: SequenceS
                 <>
                   <Image src="/assets/tag-top.png" alt="" width={1774} height={887} className="fs-tag-img" priority />
                   <TagName name={name} />
+                  {immune && (
+                    <>
+                      <span className="fs-immune-stamp">Immunity</span>
+                      <Image src="/assets/idol.png" alt="Immunity idol" width={1086} height={1448} className="fs-tag-idol" />
+                    </>
+                  )}
                 </>
               )}
             </div>

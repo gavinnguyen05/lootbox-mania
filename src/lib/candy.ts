@@ -52,10 +52,11 @@ export function eventMessage(name: string, amount: number, discordIds: string[])
 }
 
 /** Candy Island results for Discord: draw order, then who's left over. */
-export function islandMessage(round: number, picked: string[], remaining: string[]): string {
-  const lines = picked.map((id, i) => `${i + 1}. <@${id}>`);
+export function islandMessage(round: number, picked: string[], remaining: string[], immune?: string | null): string {
+  const lines = picked.map((id, i) => `${i + 1}. <@${id}>${id === immune ? " 🗿 IMMUNE" : ""}`);
   return [
     `🏝️ **CANDY ISLAND: ROUND ${round}**`,
+    ...(immune ? [`🗿 **Immunity:** <@${immune}>`, ""] : []),
     ...lines,
     "",
     `**Remaining (${remaining.length}):** ${remaining.map((id) => `<@${id}>`).join(", ")}`,

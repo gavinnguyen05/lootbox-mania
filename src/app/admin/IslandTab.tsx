@@ -12,7 +12,8 @@ import { islandMessage } from "@/lib/candy";
 import Avatar from "@/components/Avatar";
 import IslandStage from "./IslandStage";
 import DockScene from "./DockScene";
-import { islandReset, islandRun, islandUndo, type ActionResult, type IslandActionResult } from "./actions";
+import Image from "next/image";
+import { islandReset, islandRun, islandSetImmunity, islandUndo, type ActionResult, type IslandActionResult } from "./actions";
 
 export default function IslandTab({ players, island, about, setFlash }: {
   players: AdminPlayer[];
@@ -72,10 +73,13 @@ export default function IslandTab({ players, island, about, setFlash }: {
   const reset = () => confirm("Start a new game? Everyone goes back on the island. Past games stay in the Activity log.") &&
     run(() => islandReset(), () => setFresh(null));
 
+  const setImmunity = (id: string) => run(() => islandSetImmunity(id || null));
+
   async function copy() {
     if (!latest) return;
     const discord = (ids: string[]) => ids.map((id) => byId[id]?.discord_user_id ?? id);
-    await navigator.clipboard.writeText(islandMessage(latest.round, discord(latest.picked), discord(latest.remaining)));
+    const immune = latest.immune_id ? byId[latest.immune_id]?.discord_user_id ?? null : null;
+    await navigator.clipboard.writeText(islandMessage(latest.round, discord(latest.picked), discord(latest.remaining), immune));
     setCopied(true);
   }
 
@@ -106,6 +110,20 @@ export default function IslandTab({ players, island, about, setFlash }: {
                 {busy ? "Drawing..." : "🌴 Run draw"}
               </button>
             </div>
+            <div className="isl-immunity">
+              <Image src="/assets/idol.png" alt="" width={1086} height={1448} className="isl-idol" />
+              <div className="field">
+                <label htmlFor="isl-immune">Immunity for this draw</label>
+                <select id="isl-immune" className="input" value={island.immunePending ?? ""} disabled={busy || locked}
+                  onChange={(e) => setImmunity(e.target.value)}>
+                  <option value="">No one</option>
+                  {[...onIsland].sort((a, b) => islandName(a).localeCompare(islandName(b))).map((p) => (
+                    <option key={p.id} value={p.id}>{islandName(p)}</option>
+                  ))}
+                </select>
+              </div>
+              <p className="muted small">They&apos;re drawn first and can&apos;t be left over. Used up by the draw.</p>
+            </div>
             <p className="muted small">
               {onIsland.length < 2 ? "Not enough players left for another round. Start over for a new game."
                 : nOk ? `Draws ${onIsland.length - n} name${onIsland.length - n === 1 ? "" : "s"} in random order. The last ${n} left over ${n === 1 ? "is" : "are"} out.`
@@ -125,6 +143,7 @@ export default function IslandTab({ players, island, about, setFlash }: {
                     <span className="isl-pos">{i + 1}.</span>
                     <Avatar src={byId[id]?.discord_avatar_url ?? null} name={name(id)} size={28} />
                     <span className="isl-name">{name(id)}</span>
+                    {id === latest.immune_id && <span className="isl-immune-badge" title="Immune this round">🗿</span>}
                   </li>
                 ))}
               </ol>
@@ -165,7 +184,9 @@ export default function IslandTab({ players, island, about, setFlash }: {
                   <li key={p.id} className={out !== undefined ? "out" : undefined}>
                     <Avatar src={p.discord_avatar_url} name={islandName(p)} size={30} />
                     <span className="isl-name">{islandName(p)}</span>
-                    {out !== undefined ? <span className="isl-out-tag">Out R{out}</span> : <span className="isl-in-tag">On island</span>}
+                    {out !== undefined ? <span className="isl-out-tag">Out R{out}</span>
+                      : island.immunePending === p.id ? <span className="isl-in-tag isl-immune-tag">🗿 Immune next</span>
+                      : <span className="isl-in-tag">On island</span>}
                   </li>
                 );
               })}
@@ -173,7 +194,7 @@ export default function IslandTab({ players, island, about, setFlash }: {
         </section>
       </div>
 
-      <IslandStage players={players} outIds={stageOutIds} atRiskIds={latestRound?.remaining ?? []}
+      <IslandStage players={players} outIds={stageOutIds} atRiskIds={latestRound?.remaining ?? []} immuneId={latestRound?.immune_id ?? null}
         safeIds={latest?.picked ?? []} latestRound={latest?.round ?? null} toRemain={n} onLockChange={setLocked} />
 
       <DockScene players={players} eliminatedIds={latestRound?.remaining ?? []} about={about} />

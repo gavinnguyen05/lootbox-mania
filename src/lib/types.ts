@@ -106,12 +106,15 @@ export interface IslandRound {
   round: number;
   picked: string[];      // player ids, in draw order
   remaining: string[];   // player ids left over (out of the island)
+  immune_id: string | null; // immune this round: drawn first, couldn't be left over
   created_at: string;
 }
 
 export interface IslandState {
   season: number;
   rounds: IslandRound[]; // this game, oldest first, not undone
+  /** Immune for the NEXT draw (used up by it). */
+  immunePending: string | null;
 }
 
 export interface TreatRow {
