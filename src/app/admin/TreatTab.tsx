@@ -10,7 +10,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import type { AdminPlayer, Neighbor, TreatRow } from "@/lib/types";
 import { displayName } from "@/lib/names";
-import { leaderboardText, treatMessagePlain } from "@/lib/candy";
+import { LIATAO_MULTIPLIER, leaderboardText, treatMessagePlain } from "@/lib/candy";
 import Avatar from "@/components/Avatar";
 import CandyBoard from "./CandyBoard";
 import { copyImageFile } from "@/lib/copy-image";
@@ -170,6 +170,7 @@ export default function TreatTab({ players, neighbors, treats, treatsUsed, setFl
                         <span className="tt-tile-name" title={displayName(p)}>{displayName(p)}</span>
                         <span className="tt-tile-meta">
                           <span className="tt-tile-candy">{p.candy}</span>
+                          {p.liatao && <Image src="/assets/liatao.png" alt="Liatao boost" width={64} height={64} className="liatao-icon" />}
                           <span className={`tt-dot${ready ? " ready" : ""}`}>{ready ? (p.bonus_treats > 0 ? `Ready +${p.bonus_treats}` : "Ready") : "Done"}</span>
                         </span>
                       </button>
@@ -191,6 +192,7 @@ export default function TreatTab({ players, neighbors, treats, treatsUsed, setFl
                       : leftFor(selected.id) === 1 ? "1 treat ready" : `${leftFor(selected.id)} treats ready`}
                     {selected.bonus_treats > 0 && <span className="tt-bonus-note"> (incl. {selected.bonus_treats} bonus)</span>}
                   </p>
+                  {selected.liatao && <p className="liatao-note"><Image src="/assets/liatao.png" alt="Liatao boost" width={64} height={64} className="liatao-icon" /> Liatao boost: x{LIATAO_MULTIPLIER} on every treat</p>}
                 </div>
               </div>
               <div className="tt-bonus">
@@ -225,6 +227,9 @@ export default function TreatTab({ players, neighbors, treats, treatsUsed, setFl
                   <Image src="/assets/lootbox-mania-logo.png" alt="" width={72} height={72} className="tt-candy" />
                   <div>
                     <p className="tt-amount">+{shown.result.candy} candy</p>
+                    {shown.result.boosted && (
+                      <p className="liatao-note"><Image src="/assets/liatao.png" alt="Liatao boost" width={64} height={64} className="liatao-icon" /> {shown.result.base_candy} x {LIATAO_MULTIPLIER} Liatao boost</p>
+                    )}
                     <p className="tt-line">
                       {neighbor.id === shown.result.neighbor_id && neighbor.icon_path
                         ? <Image src={neighbor.icon_path} alt="" width={22} height={22} className="tt-line-icon" />

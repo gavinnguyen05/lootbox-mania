@@ -174,7 +174,7 @@ export interface TreatActionResult extends ActionResult {
 
 /** Leaderboard text read straight from the database, so it's never stale. */
 async function freshLeaderboard(): Promise<string | undefined> {
-  const { data, error } = await serviceClient().from("players").select("id, discord_user_id, candy, candy_reached_at, active");
+  const { data, error } = await serviceClient().from("players").select("id, discord_user_id, candy, candy_reached_at, active, liatao");
   if (error) {
     console.error("[leaderboard]", error.message);
     return undefined;
@@ -188,7 +188,7 @@ async function treatResponse(result: TreatResult, notice?: string): Promise<Trea
     ok: true,
     notice,
     result,
-    discordText: treatMessage(result.message, result.emoji_code, result.candy),
+    discordText: treatMessage(result.message, result.emoji_code, result.base_candy, result.candy),
     leaderboard: await freshLeaderboard(),
   };
 }
@@ -249,7 +249,8 @@ export interface EventActionResult extends ActionResult {
 }
 
 /** Give (or take) the same amount of candy to a group, all at once. Logged and undoable. */
-export async function giveCandy(playerIds: unknown, amount: unknown, name: unknown): Promise<EventActionResult> {
+/** boost: apply the Liatao 1.3x to boosted players' winnings (never to candy taken away). */
+export async function giveCandy(playerIds: unknown, amount: unknown, name: unknown, boost: unknown = true): Promise<EventActionResult> {
   try {
     await requireAdmin();
     const ids = v.uuidList(playerIds, 100);
@@ -257,15 +258,20 @@ export async function giveCandy(playerIds: unknown, amount: unknown, name: unkno
     if (n === 0) throw new v.InvalidInput("Enter an amount other than 0.");
     const title = typeof name === "string" ? name.trim().slice(0, 60) : "";
     const res = await rpc<{ event_id: number; players: { player_id: string; candy_before: number; candy_after: number }[] }>(
-      "admin_give_candy", { p_player_ids: ids, p_amount: n, p_name: title });
+      "admin_give_candy", { p_player_ids: ids, p_amount: n, p_name: title, p_boost: boost !== false });
     const { data: rows } = await serviceClient().from("players").select("id, discord_user_id").in("id", ids);
-    const discordIds = ids.map((id) => rows?.find((r) => r.id === id)?.discord_user_id).filter((x): x is string => Boolean(x));
+    const discordOf = (id: string) => rows?.find((r) => r.id === id)?.discord_user_id;
+    const discordIds = ids.map(discordOf).filter((x): x is string => Boolean(x));
+    // Anyone who got more than the base amount was Liatao-boosted.
+    const boosted = res.players
+      .filter((p) => p.candy_after - p.candy_before !== n && discordOf(p.player_id))
+      .map((p) => ({ id: discordOf(p.player_id)!, amount: p.candy_after - p.candy_before }));
     refreshPages();
     return {
       ok: true,
       notice: `${n > 0 ? "Gave" : "Took"} ${Math.abs(n)} candy ${n > 0 ? "to" : "from"} ${ids.length} player${ids.length === 1 ? "" : "s"}.`,
       changes: res.players.map((p) => ({ player_id: p.player_id, from: p.candy_before, to: p.candy_after })),
-      discordText: eventMessage(title, n, discordIds),
+      discordText: eventMessage(title, n, discordIds, boosted),
       leaderboard: await freshLeaderboard(),
     };
   } catch (e) {

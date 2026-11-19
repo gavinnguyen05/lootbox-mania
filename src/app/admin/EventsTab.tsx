@@ -4,10 +4,11 @@
 // (unless someone's candy changed since). The leaderboard shows before → after.
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import type { AdminPlayer, CandyEvent } from "@/lib/types";
 import { displayName } from "@/lib/names";
-import { leaderboardText } from "@/lib/candy";
+import { LIATAO_MULTIPLIER, leaderboardText } from "@/lib/candy";
 import Avatar from "@/components/Avatar";
 import LocalTime from "@/components/LocalTime";
 import CandyBoard, { type CandyChange } from "./CandyBoard";
@@ -42,8 +43,14 @@ export default function EventsTab({ players, events, setFlash }: {
       .sort((a, b) => displayName(a).localeCompare(displayName(b)));
   }, [active, query]);
 
-  const n = Number(amount);
-  const amountOk = Number.isInteger(n) && n !== 0 && n >= -1000 && n <= 1000;
+  // Give or deduct: the box always takes a positive number; the switch sets the direction.
+  const [mode, setMode] = useState<"give" | "take">("give");
+  const amt = Number(amount);
+  const n = mode === "take" ? -amt : amt;
+  // Liatao boost on winnings: on by default, can be switched off per event.
+  const [boost, setBoost] = useState(true);
+  const boostedPicked = [...picked].filter((id) => byId[id]?.liatao);
+  const amountOk = Number.isInteger(amt) && amt >= 1 && amt <= 1000;
   const board = freshBoard ?? leaderboardText(players);
 
   function toggle(id: string) {
@@ -80,7 +87,7 @@ export default function EventsTab({ players, events, setFlash }: {
     if (!amountOk || picked.size === 0) return;
     const who = picked.size === 1 ? displayName(byId[[...picked][0]]) : `${picked.size} players`;
     if (!confirm(`${n > 0 ? "Give" : "Take"} ${Math.abs(n)} candy ${n > 0 ? "to" : "from"} ${who}?`)) return;
-    run(() => giveCandy([...picked], n, name), (res) => {
+    run(() => giveCandy([...picked], n, name, boost), (res) => {
       setChanges(Object.fromEntries((res.changes ?? []).map((c) => [c.player_id, { from: c.from, to: c.to }])));
       setMessage(res.discordText ?? "");
       setCopied(false);
@@ -113,23 +120,41 @@ export default function EventsTab({ players, events, setFlash }: {
         <div className="ev-left">
           <section className="panel ev-form" aria-labelledby="ev-h">
             <h3 id="ev-h">New candy event</h3>
+            <div className="ev-mode" role="radiogroup" aria-label="Give or deduct candy">
+              <button type="button" role="radio" aria-checked={mode === "give"} className={`ev-mode-btn${mode === "give" ? " on give" : ""}`} onClick={() => setMode("give")}>+ Give candy</button>
+              <button type="button" role="radio" aria-checked={mode === "take"} className={`ev-mode-btn${mode === "take" ? " on take" : ""}`} onClick={() => setMode("take")}>− Deduct candy</button>
+            </div>
             <div className="ev-fields">
               <div className="field ev-name">
                 <label htmlFor="ev-name">Event name (optional)</label>
                 <input id="ev-name" className="input" maxLength={60} placeholder="Costume contest" value={name} onChange={(e) => setName(e.target.value)} />
               </div>
               <div className="field ev-amount">
-                <label htmlFor="ev-amount">Candy each</label>
-                <input id="ev-amount" className="input" type="number" inputMode="numeric" min={-1000} max={1000} step={1}
+                <label htmlFor="ev-amount">{mode === "take" ? "Candy to deduct each" : "Candy each"}</label>
+                <input id="ev-amount" className="input" type="number" inputMode="numeric" min={1} max={1000} step={1}
                   value={amount} onChange={(e) => setAmount(e.target.value)} aria-describedby="ev-amount-hint" />
               </div>
             </div>
             <div className="ev-quick" role="group" aria-label="Quick amounts">
               {QUICK_AMOUNTS.map((q) => (
-                <button key={q} type="button" className={`btn btn-sm${n === q ? " active" : ""}`} onClick={() => setAmount(String(q))}>+{q}</button>
+                <button key={q} type="button" className={`btn btn-sm${amt === q ? " active" : ""}`} onClick={() => setAmount(String(q))}>{mode === "take" ? "−" : "+"}{q}</button>
               ))}
             </div>
-            <p id="ev-amount-hint" className="muted small">Use a negative number to take candy away. Nobody can go below 0.</p>
+            <p id="ev-amount-hint" className="muted small">
+              {mode === "take" ? "Deducts from everyone selected. If anyone would go below 0, nobody is changed." : "Gives to everyone selected."}
+            </p>
+            {mode === "give" && <label className="liatao-toggle">
+              <input type="checkbox" checked={boost} onChange={(e) => setBoost(e.target.checked)} />
+              <Image src="/assets/liatao.png" alt="Liatao boost" width={64} height={64} className="liatao-icon" />
+              <span>
+                <strong>Liatao boost x{LIATAO_MULTIPLIER}</strong>
+                <span className="muted small">
+                  {" "}{boostedPicked.length && amountOk && n > 0 && boost
+                    ? `${boostedPicked.map((id) => displayName(byId[id])).join(" and ")} get${boostedPicked.length === 1 ? "s" : ""} ${Math.round(n * LIATAO_MULTIPLIER)} instead of ${n}.`
+                    : "Boosted players get 1.3x winnings."}
+                </span>
+              </span>
+            </label>}
           </section>
 
           <section className="panel" aria-labelledby="ev-players-h">
@@ -149,13 +174,13 @@ export default function EventsTab({ players, events, setFlash }: {
                       <input type="checkbox" checked={picked.has(p.id)} onChange={() => toggle(p.id)} />
                       <Avatar src={p.discord_avatar_url} name={displayName(p)} size={30} />
                       <span className="ev-row-name">{displayName(p)}</span>
-                      <span className="ev-row-candy">{p.candy}</span>
+                      <span className="ev-row-candy">{p.liatao && <Image src="/assets/liatao.png" alt="Liatao boost" width={64} height={64} className="liatao-icon" />}{p.candy}</span>
                     </label>
                   </li>
                 ))}
               </ul>
             )}
-            <button className="btn btn-primary btn-big ev-give" disabled={busy || !amountOk || picked.size === 0} onClick={give}>
+            <button className={`btn btn-big ev-give ${mode === "take" ? "btn-danger" : "btn-primary"}`} disabled={busy || !amountOk || picked.size === 0} onClick={give}>
               {busy ? "Giving..." : picked.size === 0 ? "Select players"
                 : !amountOk ? "Enter an amount"
                 : `${n > 0 ? "Give" : "Take"} ${Math.abs(n)} candy ${n > 0 ? "to" : "from"} ${picked.size} player${picked.size === 1 ? "" : "s"}`}

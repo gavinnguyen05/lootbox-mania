@@ -569,3 +569,19 @@
                filter: drop-shadow(0 .4cqw .5cqw rgba(0, 0, 0, .5)); animation: fs-idol-in .4s ease-out both; }
 @keyframes fs-idol-in { from { opacity: 0; transform: translateY(2cqw) rotate(8deg) scale(.8); } to { opacity: 1; transform: rotate(8deg); } }
 @media (prefers-reduced-motion: reduce) { .fs-tag-idol { animation: none; } }
+
+/* ---------- Liatao boost ---------- */
+.liatao-icon { display: inline-block; width: 18px; height: 18px; object-fit: contain; vertical-align: -4px; }
+.liatao-note { display: flex; align-items: center; gap: 6px; margin: 2px 0 0; font-family: var(--ui); font-size: 13px; font-weight: 700; color: #f2b8d6; }
+.liatao-toggle { display: flex; align-items: center; gap: 8px; margin-top: 8px; padding: 6px 10px; border: 1px solid #6a3a55; border-radius: 8px; background: #22141c; cursor: pointer; }
+.liatao-toggle input { width: 18px; height: 18px; accent-color: #e57fb4; flex: none; }
+.liatao-toggle .liatao-icon { width: 22px; height: 22px; }
+.ev-row-candy .liatao-icon { margin-right: 4px; width: 16px; height: 16px; }
+.tt-tile-meta .liatao-icon { width: 16px; height: 16px; }
+
+/* Events: give / deduct switch. */
+.ev-mode { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 8px 0 4px; }
+.ev-mode-btn { min-height: var(--tap); border-radius: 8px; border: 1px solid var(--line-strong); background: var(--panel-2); color: var(--muted); font-size: 16px; cursor: pointer; }
+.ev-mode-btn.on.give { color: #b8f5c0; border-color: #2b7a39; background: #12251a; font-weight: 700; }
+.ev-mode-btn.on.take { color: #ffc2c2; border-color: #8a2b2b; background: #2a1414; font-weight: 700; }
+.ev-mode-btn:focus-visible { outline: 2px solid var(--purple); outline-offset: 2px; }

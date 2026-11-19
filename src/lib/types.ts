@@ -43,6 +43,8 @@ export interface AdminPlayer extends PlayerWithItems {
   candy: number;
   candy_reached_at: string;
   bonus_treats: number;
+  /** Liatao boost: 1.3x candy from trick-or-treats and (optionally) events. */
+  liatao: boolean;
 }
 
 export interface NeighborOutcome {
@@ -70,7 +72,9 @@ export interface TreatResult {
   neighbor: string;
   flag: string;
   emoji_code: string;
-  candy: number;
+  candy: number;          // what the player got (after any Liatao boost)
+  base_candy: number;     // what the neighbor gave
+  boosted: boolean;
   message: string;
   /** Image to post alongside this outcome's message, if any (e.g. /assets/orangebar.png). */
   attach_image: string | null;
