@@ -56,6 +56,7 @@ const GAME_ERRORS: Record<string, string> = {
   NO_BONUS_TO_REMOVE: "This player has no bonus boxes to remove.",
   TOO_MANY_BONUS: "That's the most bonus boxes a player can hold (99).",
   INVALID_COUNT: "Invalid number.",
+  PLAYER_EXISTS: "That Discord user is already a player.",
 };
 
 /** Turn any failure into a safe message. Unknown errors are logged, never shown. */
@@ -463,6 +464,42 @@ export async function addPlayer(discordUserId: unknown): Promise<ActionResult> {
   } catch (e) {
     if (e instanceof Error && e.message.startsWith("DISCORD_")) {
       console.error("[addPlayer]", e.message);
+      return { ok: false, error: "Couldn't load that Discord profile. Check the ID and that the bot is in the server." };
+    }
+    return fail(e);
+  }
+}
+
+/**
+ * Adds a trick-or-treat-only player: on the candy leaderboard and Events tab,
+ * never on the public site or Candy Island. Name and avatar come from Discord.
+ */
+export async function addTreatPlayer(discordUserId: unknown, candy: unknown): Promise<TreatActionResult> {
+  try {
+    await requireAdmin();
+    const id = v.discordId(discordUserId);
+    const start = v.int(candy, 0, 100000, "starting candy");
+    const db = serviceClient();
+
+    const { data: existing } = await db.from("players").select("id").eq("discord_user_id", id).maybeSingle();
+    if (existing) return { ok: false, error: GAME_ERRORS.PLAYER_EXISTS };
+
+    const profile = await fetchDiscordProfile(id);
+    const base = slugify(profile.username);
+    const { data: taken } = await db.from("players").select("slug").like("slug", `${base}%`);
+    const used = new Set((taken ?? []).map((r) => r.slug));
+    let slug = base;
+    for (let n = 2; used.has(slug); n++) slug = `${base}-${n}`;
+
+    await rpc("admin_add_treat_player", {
+      p_discord_user_id: id, p_slug: slug, p_username: profile.username,
+      p_display_name: profile.displayName, p_avatar_url: profile.avatarUrl, p_candy: start,
+    });
+    refreshPages();
+    return { ok: true, notice: `Added ${profile.displayName} for trick-or-treat.`, leaderboard: await freshLeaderboard() };
+  } catch (e) {
+    if (e instanceof Error && e.message.startsWith("DISCORD_")) {
+      console.error("[addTreatPlayer]", e.message);
       return { ok: false, error: "Couldn't load that Discord profile. Check the ID and that the bot is in the server." };
     }
     return fail(e);

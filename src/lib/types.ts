@@ -45,6 +45,8 @@ export interface AdminPlayer extends PlayerWithItems {
   bonus_treats: number;
   /** Liatao boost: 1.3x candy from trick-or-treats and (optionally) events. */
   liatao: boolean;
+  /** Trick-or-treat only: never on public pages, lootbox tabs, or Candy Island. */
+  treat_only: boolean;
 }
 
 export interface NeighborOutcome {

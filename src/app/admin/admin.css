@@ -8,7 +8,10 @@
   .admin-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 14px; }
 }
 
-.tabs { display: flex; border-bottom: 1px solid var(--line-strong); margin-bottom: 12px; }
+/* Six tabs don't fit a phone: the bar scrolls sideways instead of widening the page. */
+.tabs { display: flex; border-bottom: 1px solid var(--line-strong); margin-bottom: 12px; overflow-x: auto; scrollbar-width: none; }
+.tabs::-webkit-scrollbar { display: none; }
+.tabs .tab { flex: none; }
 .tab {
   flex: 1; min-height: var(--tap); padding: 0 8px;
   background: none; border: 0; border-bottom: 3px solid transparent; margin-bottom: -1px;
@@ -201,19 +204,32 @@
    Pumpkin-orange theme so it doesn't read like the lootbox tab:
    player tiles + doorstep on the left, a Discord-look leaderboard on the right. */
 .tt { --pumpkin: #ff8a3d; --pumpkin-bg: #2a1708; --pumpkin-line: #7a3d14; }
-.tt-grid { display: grid; gap: 14px; align-items: start; }
+.tt-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; align-items: start; }
 @media (min-width: 1100px) { .tt-grid { grid-template-columns: minmax(0, 1fr) minmax(360px, 440px); } }
 .tt-left { display: grid; gap: 12px; min-width: 0; }
 .tt-label { font-family: var(--ui); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
 
-.tt-neighbor { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 10px 12px; border: 1px solid var(--pumpkin-line); border-radius: 12px; background: var(--pumpkin-bg); }
-.tt-neighbor-icon { width: 36px; height: 36px; object-fit: contain; border-radius: 6px; flex: none; }
-.tt-neighbor-flag { font-size: 26px; line-height: 1; }
+.tt-neighbor { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; padding: 12px 16px; border-radius: 12px; background: var(--pumpkin-bg); }
+.tt-neighbor-pick { display: flex; align-items: center; gap: 12px; }
+.tt-neighbor-icon { width: 48px; height: 48px; object-fit: contain; flex: none; }
+.tt-neighbor-field { display: grid; gap: 4px; }
+.tt-select { width: auto; min-width: 220px; font-size: 17px; font-weight: 700; }
+/* Odds: a plain payout table. */
+.tt-odds { border-collapse: collapse; font-family: var(--ui); font-variant-numeric: tabular-nums; }
+.tt-odds th { padding: 3px 14px 3px 0; text-align: left; font-size: 12px; font-weight: 400; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.tt-odds td { padding: 3px 0 3px 18px; text-align: right; }
+.tt-odds tr:first-child td { font-size: 17px; font-weight: 700; color: var(--text); }
+.tt-odds tr:last-child td { font-size: 13px; color: var(--muted); }
+@media (max-width: 599px) {
+  .tt-neighbor { padding: 12px; }
+  .tt-odds { width: 100%; }
+  .tt-odds th { padding-right: 6px; font-size: 11px; letter-spacing: .04em; }
+  .tt-odds td { padding-left: 6px; }
+  .tt-odds tr:first-child td { font-size: 15px; }
+  .tt-odds tr:last-child td { font-size: 12px; }
+}
+.tt-neighbor-flag { font-size: 34px; line-height: 1; }
 .tt-line-icon { width: 22px; height: 22px; object-fit: contain; vertical-align: -5px; }
-.tt-select { width: auto; min-width: 200px; font-size: 17px; font-weight: 700; border-color: var(--pumpkin-line); }
-.tt-odds { list-style: none; margin: 0 0 0 auto; padding: 0; display: flex; flex-wrap: wrap; gap: 4px; }
-.tt-odds li { font-family: var(--ui); font-size: 13px; padding: 2px 8px; border-radius: 999px; background: #16161c; border: 1px solid var(--line-strong); }
-.tt-odds li span { color: var(--muted); }
 
 .tt-players-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
 .tt-players-head h3 { font-size: 18px; font-weight: 700; }
@@ -255,9 +271,9 @@
 .tt-attach { width: 100%; max-width: 480px; height: auto; border-radius: 6px; }
 
 /* Discord-look leaderboard (Discord's dark theme colors). */
-.tt-board { display: grid; gap: 8px; min-width: 0; }
+.tt-board { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; min-width: 0; }
 .tt-board-bar { display: flex; justify-content: flex-end; gap: 8px; flex-wrap: wrap; }
-.dc-message { background: #313338; border-radius: 8px; padding: 12px 14px 12px 12px; border-left: 4px solid #4e5058; font-family: "gg sans", "Noto Sans", Arial, Helvetica, sans-serif; color: #dbdee1; font-size: 16px; line-height: 1.6; }
+.dc-message { background: #313338; border-radius: 8px; padding: 12px 14px 12px 12px; border-left: 4px solid #4e5058; font-family: "gg sans", "Noto Sans", Arial, Helvetica, sans-serif; color: #dbdee1; font-size: 16px; line-height: 1.6; min-width: 0; overflow-wrap: anywhere; }
 .dc-title { display: flex; align-items: center; gap: 6px; font-family: inherit; font-size: 20px; font-weight: 700; color: #f2f3f5; margin-bottom: 4px; }
 .dc-title span { text-decoration: underline; text-underline-offset: 3px; }
 .dc-candy { width: 18px; height: 18px; object-fit: contain; vertical-align: -3px; }
@@ -585,3 +601,11 @@
 .ev-mode-btn.on.give { color: #b8f5c0; border-color: #2b7a39; background: #12251a; font-weight: 700; }
 .ev-mode-btn.on.take { color: #ffc2c2; border-color: #8a2b2b; background: #2a1414; font-weight: 700; }
 .ev-mode-btn:focus-visible { outline: 2px solid var(--purple); outline-offset: 2px; }
+
+/* Add a trick-or-treater */
+.tt-add { margin-top: 14px; }
+.tt-add summary { cursor: pointer; color: var(--muted); font-size: 14px; }
+.tt-add summary:hover { color: var(--text); }
+.tt-add-form { display: flex; flex-wrap: wrap; align-items: end; gap: 10px; margin: 10px 0 6px; }
+.tt-add-form .field { flex: 1 1 200px; margin: 0; }
+.tt-add-form .tt-add-candy { flex: 0 1 130px; }

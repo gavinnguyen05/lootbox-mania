@@ -14,7 +14,7 @@ import { LIATAO_MULTIPLIER, leaderboardText, treatMessagePlain } from "@/lib/can
 import Avatar from "@/components/Avatar";
 import CandyBoard from "./CandyBoard";
 import { copyImageFile } from "@/lib/copy-image";
-import { grantTreat, rerollTreat, setCandy, trickOrTreat, undoTreat, type ActionResult, type TreatActionResult } from "./actions";
+import { addTreatPlayer, grantTreat, rerollTreat, setCandy, trickOrTreat, undoTreat, type ActionResult, type TreatActionResult } from "./actions";
 
 const TREATS_PER_WINDOW = 1;
 
@@ -37,6 +37,8 @@ export default function TreatTab({ players, neighbors, treats, treatsUsed, setFl
   const [busy, setBusy] = useState(false);
   const busyRef = useRef(false); // blocks a second click before React re-renders
   const [copied, setCopied] = useState(false);
+  const [newId, setNewId] = useState("");
+  const [newCandy, setNewCandy] = useState("0");
   // Leaderboard text returned by the last action, used until the page data refreshes.
   const [freshBoard, setFreshBoard] = useState<string | null>(null);
   useEffect(() => setFreshBoard(null), [players]);
@@ -134,19 +136,32 @@ export default function TreatTab({ players, neighbors, treats, treatsUsed, setFl
         {/* ---------- Left: neighbor, players, doorstep ---------- */}
         <div className="tt-left">
           <div className="tt-neighbor">
-            {neighbor.icon_path
-              ? <Image src={neighbor.icon_path} alt="" width={36} height={36} className="tt-neighbor-icon" />
-              : <span className="tt-neighbor-flag" aria-hidden>{neighbor.flag}</span>}
-            <label htmlFor="tt-neighbor" className="tt-label">Neighbor</label>
-            <select id="tt-neighbor" className="input tt-select" value={neighbor.id}
-              onChange={(e) => { setNeighborId(e.target.value); setResult(null); }}>
-              {neighbors.map((n) => <option key={n.id} value={n.id}>{n.flag ? `${n.flag} ` : ""}{n.name}</option>)}
-            </select>
-            <ul className="tt-odds" aria-label={`${neighbor.name}'s odds`}>
-              {[...neighbor.neighbor_outcomes].sort((a, b) => a.sort_order - b.sort_order).map((o) => (
-                <li key={o.sort_order}><strong>{o.candy}</strong> <span>{Number(o.weight)}%</span></li>
-              ))}
-            </ul>
+            <div className="tt-neighbor-pick">
+              {neighbor.icon_path
+                ? <Image src={neighbor.icon_path} alt="" width={48} height={48} className="tt-neighbor-icon" />
+                : <span className="tt-neighbor-flag" aria-hidden>{neighbor.flag}</span>}
+              <div className="tt-neighbor-field">
+                <label htmlFor="tt-neighbor" className="tt-label">Neighbor</label>
+                <select id="tt-neighbor" className="input tt-select" value={neighbor.id}
+                  onChange={(e) => { setNeighborId(e.target.value); setResult(null); }}>
+                  {neighbors.map((n) => <option key={n.id} value={n.id}>{n.flag ? `${n.flag} ` : ""}{n.name}</option>)}
+                </select>
+              </div>
+            </div>
+            {/* Payout table: one column per tier, candy on top, chance underneath. */}
+            <table className="tt-odds">
+              <caption className="sr-only">{neighbor.name}&apos;s odds</caption>
+              <tbody>
+                <tr>
+                  <th scope="row">Candy</th>
+                  {[...neighbor.neighbor_outcomes].sort((a, b) => a.sort_order - b.sort_order).map((o) => <td key={o.sort_order}>{o.candy}</td>)}
+                </tr>
+                <tr>
+                  <th scope="row">Chance</th>
+                  {[...neighbor.neighbor_outcomes].sort((a, b) => a.sort_order - b.sort_order).map((o) => <td key={o.sort_order}>{Number(o.weight)}%</td>)}
+                </tr>
+              </tbody>
+            </table>
           </div>
 
           <section className="tt-players" aria-labelledby="tt-players-h">
@@ -179,6 +194,27 @@ export default function TreatTab({ players, neighbors, treats, treatsUsed, setFl
                 })}
               </ul>
             )}
+            {/* Someone who only trick-or-treats: never on lootbox pages or Candy Island. */}
+            <details className="tt-add">
+              <summary>Add a trick-or-treater</summary>
+              <form className="tt-add-form" onSubmit={(e) => {
+                e.preventDefault();
+                run(() => addTreatPlayer(newId.trim(), Number(newCandy)), () => { setNewId(""); setNewCandy("0"); });
+              }}>
+                <div className="field">
+                  <label htmlFor="tt-add-id">Discord user ID</label>
+                  <input id="tt-add-id" className="input" inputMode="numeric" pattern="[0-9]{15,21}" placeholder="e.g. 123456789012345678"
+                    value={newId} onChange={(e) => setNewId(e.target.value)} />
+                </div>
+                <div className="field tt-add-candy">
+                  <label htmlFor="tt-add-candy">Starting candy</label>
+                  <input id="tt-add-candy" className="input" type="number" inputMode="numeric" min={0} max={100000} step={1}
+                    value={newCandy} onChange={(e) => setNewCandy(e.target.value)} />
+                </div>
+                <button className="btn btn-primary" disabled={busy || !newId.trim()}>Add</button>
+              </form>
+              <p className="muted small">Trick-or-treat only. They show on the candy leaderboard and Events, not on the lootbox pages or Candy Island.</p>
+            </details>
           </section>
 
           {selected && (

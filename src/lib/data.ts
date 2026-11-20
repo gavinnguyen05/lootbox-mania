@@ -84,7 +84,7 @@ export async function getAdminData(windowKey: string) {
   const db = serviceClient();
   const [items, players, rolls, actions, used, neighbors, treats, treatsUsedRows, candyEvents, island] = await Promise.all([
     db.from("lootbox_items").select(ITEM_COLS).order("sort_order").then(must<Item[]>),
-    db.from("players").select(`${PLAYER_COLS}, discord_user_id, active, candy, candy_reached_at, bonus_treats, liatao, player_lootbox_items(${PLAYER_ITEM_COLS})`)
+    db.from("players").select(`${PLAYER_COLS}, discord_user_id, active, candy, candy_reached_at, bonus_treats, liatao, treat_only, player_lootbox_items(${PLAYER_ITEM_COLS})`)
       .order("discord_display_name").then(must<AdminPlayer[]>),
     db.from("lootbox_rolls").select(`${ROLL_COLS}, undone`).order("id", { ascending: false }).limit(200).then(must<Roll[]>),
     db.from("admin_actions").select("id, action_type, player_id, metadata, created_at")

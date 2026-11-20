@@ -28,7 +28,7 @@ export default function IslandTab({ players, island, about, setFlash }: {
   const [copied, setCopied] = useState(false);
   const [fresh, setFresh] = useState<number | null>(null); // round just drawn, for the reveal animation
 
-  const active = useMemo(() => players.filter((p) => p.active), [players]);
+  const active = useMemo(() => players.filter((p) => p.active && !p.treat_only), [players]);
   const byId = useMemo(() => Object.fromEntries(players.map((p) => [p.id, p])), [players]);
   const outRound = useMemo(() => {
     const m: Record<string, number> = {};

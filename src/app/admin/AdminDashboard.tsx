@@ -103,7 +103,7 @@ export default function AdminDashboard(props: Props) {
 
       <div id="admin-panel" role="tabpanel" aria-labelledby={`tab-${tab}`}>
         {tab === "open" && (
-          <OpenTab {...shared} players={props.players.filter((p) => p.active)} used={props.used}
+          <OpenTab {...shared} players={props.players.filter((p) => p.active && !p.treat_only)} used={props.used}
             selected={selected?.active ? selected : null} onSelect={setSelectedId} />
         )}
         {tab === "treat" && (
