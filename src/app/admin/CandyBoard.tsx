@@ -60,7 +60,7 @@ export default function CandyBoard({ players, changes, leaderboard, onEdit }: {
                   ) : p.candy}
                 </span>{" "}
                 <Image src="/assets/lootbox-mania-logo.png" alt="candy" width={18} height={18} className="dc-candy" />
-                {p.liatao && <Image src="/assets/liatao.png" alt="Liatao boost" width={18} height={18} className="dc-candy" />}
+                {p.liatao && <Image src="/assets/liatao.png" alt="Latiao boost" width={18} height={18} className="dc-candy" />}
                 <button className="dc-edit" onClick={() => onEdit(p)} aria-label={`Set ${displayName(p)}'s candy`}>Edit</button>
               </li>
             );

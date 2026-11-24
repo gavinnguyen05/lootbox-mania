@@ -47,7 +47,7 @@ export default function EventsTab({ players, events, setFlash }: {
   const [mode, setMode] = useState<"give" | "take">("give");
   const amt = Number(amount);
   const n = mode === "take" ? -amt : amt;
-  // Liatao boost on winnings: on by default, can be switched off per event.
+  // Latiao boost on winnings: on by default, can be switched off per event.
   const [boost, setBoost] = useState(true);
   const boostedPicked = [...picked].filter((id) => byId[id]?.liatao);
   const amountOk = Number.isInteger(amt) && amt >= 1 && amt <= 1000;
@@ -145,9 +145,9 @@ export default function EventsTab({ players, events, setFlash }: {
             </p>
             {mode === "give" && <label className="liatao-toggle">
               <input type="checkbox" checked={boost} onChange={(e) => setBoost(e.target.checked)} />
-              <Image src="/assets/liatao.png" alt="Liatao boost" width={64} height={64} className="liatao-icon" />
+              <Image src="/assets/liatao.png" alt="Latiao boost" width={64} height={64} className="liatao-icon" />
               <span>
-                <strong>Liatao boost x{LIATAO_MULTIPLIER}</strong>
+                <strong>Latiao boost x{LIATAO_MULTIPLIER}</strong>
                 <span className="muted small">
                   {" "}{boostedPicked.length && amountOk && n > 0 && boost
                     ? `${boostedPicked.map((id) => displayName(byId[id])).join(" and ")} get${boostedPicked.length === 1 ? "s" : ""} ${Math.round(n * LIATAO_MULTIPLIER)} instead of ${n}.`
@@ -174,7 +174,7 @@ export default function EventsTab({ players, events, setFlash }: {
                       <input type="checkbox" checked={picked.has(p.id)} onChange={() => toggle(p.id)} />
                       <Avatar src={p.discord_avatar_url} name={displayName(p)} size={30} />
                       <span className="ev-row-name">{displayName(p)}</span>
-                      <span className="ev-row-candy">{p.liatao && <Image src="/assets/liatao.png" alt="Liatao boost" width={64} height={64} className="liatao-icon" />}{p.candy}</span>
+                      <span className="ev-row-candy">{p.liatao && <Image src="/assets/liatao.png" alt="Latiao boost" width={64} height={64} className="liatao-icon" />}{p.candy}</span>
                     </label>
                   </li>
                 ))}
