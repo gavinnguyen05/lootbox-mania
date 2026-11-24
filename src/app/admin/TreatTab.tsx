@@ -37,6 +37,7 @@ export default function TreatTab({ players, neighbors, treats, treatsUsed, setFl
   const [busy, setBusy] = useState(false);
   const busyRef = useRef(false); // blocks a second click before React re-renders
   const [copied, setCopied] = useState(false);
+  const [boardCopied, setBoardCopied] = useState(false);
   const [newId, setNewId] = useState("");
   const [newCandy, setNewCandy] = useState("0");
   // Leaderboard text returned by the last action, used until the page data refreshes.
@@ -68,6 +69,7 @@ export default function TreatTab({ players, neighbors, treats, treatsUsed, setFl
     setBusy(true);
     setFlash(null);
     setCopied(false);
+    setBoardCopied(false);
     try {
       const res = await task();
       if (!res.ok) setFlash(res);
@@ -86,10 +88,12 @@ export default function TreatTab({ players, neighbors, treats, treatsUsed, setFl
   }
 
   // A treat (or reroll) result: total before = new total - candy from this treat.
+  // The message is copied right away (step 1 done); the leaderboard is step 2.
   function showTreat(res: TreatActionResult) {
     setResult(res);
     const r = res.result;
     if (r) setChange({ playerId: r.player_id, from: r.total - r.candy, to: r.total });
+    if (res.discordText) navigator.clipboard.writeText(res.discordText).then(() => setCopied(true), () => {});
   }
 
   const treat = () => selected && neighbor && run(() => trickOrTreat(selected.id, neighbor.id, crypto.randomUUID()), showTreat);
@@ -125,6 +129,37 @@ export default function TreatTab({ players, neighbors, treats, treatsUsed, setFl
     await navigator.clipboard.writeText(text);
     setCopied(true);
   }
+
+  async function copyBoard() {
+    await navigator.clipboard.writeText(board);
+    setBoardCopied(true);
+  }
+
+  // Keyboard: Enter knocks, C copies the message, L the leaderboard, I the image.
+  // Ignored while typing in a field, and Enter is left alone on a focused button.
+  const keys = useRef<(e: KeyboardEvent) => void>(() => {});
+  keys.current = (e: KeyboardEvent) => {
+    if (e.metaKey || e.ctrlKey || e.altKey || e.repeat) return;
+    const el = document.activeElement as HTMLElement | null;
+    const tag = el?.tagName;
+    if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || el?.isContentEditable) return;
+    const k = e.key.toLowerCase();
+    if (k === "enter") {
+      if (tag === "BUTTON" || tag === "A" || tag === "SUMMARY") return;
+      if (selected && !busy && leftFor(selected.id) > 0) { e.preventDefault(); treat(); }
+    } else if (k === "c" && shown?.discordText) {
+      e.preventDefault(); copyMessage(shown.discordText);
+    } else if (k === "l") {
+      e.preventDefault(); copyBoard();
+    } else if (k === "i" && shown?.result?.attach_image) {
+      e.preventDefault(); copyAttached(shown.result.attach_image);
+    }
+  };
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => keys.current(e);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   if (!neighbor) {
     return <div className="panel empty-state"><p>No neighbors set up yet. Run 0004_trick_or_treat.sql in Supabase.</p></div>;
@@ -249,6 +284,7 @@ export default function TreatTab({ players, neighbors, treats, treatsUsed, setFl
                         ? <Image src={neighbor.icon_path} alt="" width={32} height={32} className="tt-knock-icon" />
                         : <span aria-hidden>{neighbor.flag || "🎃"}</span>}
                       Knock on {neighbor.name}&apos;s door
+                      <kbd className="tt-kbd">Enter</kbd>
                     </>
                   )}
                 </button>
@@ -261,7 +297,7 @@ export default function TreatTab({ players, neighbors, treats, treatsUsed, setFl
               {shown?.result && (
                 <div className="tt-result">
                   <Image src="/assets/lootbox-mania-logo.png" alt="" width={72} height={72} className="tt-candy" />
-                  <div>
+                  <div className="tt-result-body">
                     <p className="tt-amount">+{shown.result.candy} candy</p>
                     {shown.result.boosted && (
                       <p className="liatao-note"><Image src="/assets/liatao.png" alt="Latiao boost" width={64} height={64} className="liatao-icon" /> {shown.result.base_candy} x {LIATAO_MULTIPLIER} Latiao boost</p>
@@ -273,28 +309,39 @@ export default function TreatTab({ players, neighbors, treats, treatsUsed, setFl
                       <strong>{shown.result.neighbor}:</strong> {treatMessagePlain(shown.result.message)}
                     </p>
                     {shown.result.replayed && <p className="muted small">Already rolled. Showing the saved result.</p>}
-                  </div>
-                </div>
-              )}
-              {shown?.discordText && (
-                <>
-                <div className="tt-copy">
-                  <textarea className="input discord-text" readOnly aria-label="Discord message" rows={2} value={shown.discordText} />
-                  <div className="tt-copy-buttons">
-                    <button className="btn btn-sm btn-primary" onClick={() => copyMessage(shown.discordText ?? "")}>
-                      {copied ? "Copied" : "Copy message"}
-                    </button>
-                    {shown.result?.attach_image && (
-                      <button className="btn btn-sm btn-orange" onClick={() => copyAttached(shown.result!.attach_image!)}>
-                        {imageCopied === "done" ? "Image copied" : imageCopied === "error" ? "Copy failed" : "Copy image"}
-                      </button>
+
+                    {shown.discordText && (
+                      <>
+                        {/* The two pastes, in order. The message is copied automatically after a knock. */}
+                        <div className="tt-steps">
+                          <button className={`btn tt-step${copied ? " done" : ""}`} onClick={() => copyMessage(shown.discordText ?? "")}>
+                            <span className="tt-step-n" aria-hidden>{copied ? "✓" : "1"}</span>
+                            {copied ? "Message copied" : "Copy message"}
+                            <kbd className="tt-kbd">C</kbd>
+                          </button>
+                          <button className={`btn tt-step${boardCopied ? " done" : ""}`} onClick={copyBoard}>
+                            <span className="tt-step-n" aria-hidden>{boardCopied ? "✓" : "2"}</span>
+                            {boardCopied ? "Leaderboard copied" : "Copy leaderboard"}
+                            <kbd className="tt-kbd">L</kbd>
+                          </button>
+                          {shown.result.attach_image && (
+                            <button className={`btn tt-step tt-step-img${imageCopied === "done" ? " done" : ""}`} onClick={() => copyAttached(shown.result!.attach_image!)}>
+                              {imageCopied === "done" ? "Image copied" : imageCopied === "error" ? "Copy failed" : "Copy image"}
+                              <kbd className="tt-kbd">I</kbd>
+                            </button>
+                          )}
+                        </div>
+                        {shown.result.attach_image && (
+                          <Image src={shown.result.attach_image} alt="Image to post with this message" width={480} height={60} className="tt-attach" />
+                        )}
+                        <details className="tt-code">
+                          <summary>Show Discord code</summary>
+                          <textarea className="input discord-text" readOnly aria-label="Discord message" rows={3} value={shown.discordText} />
+                        </details>
+                      </>
                     )}
                   </div>
                 </div>
-                {shown.result?.attach_image && (
-                  <Image src={shown.result.attach_image} alt="Image to post with this message" width={480} height={60} className="tt-attach" />
-                )}
-                </>
               )}
             </section>
           )}

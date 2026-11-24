@@ -261,13 +261,11 @@
 .tt-knock:hover:not(:disabled) { background: linear-gradient(#ffad6e, #f5862e); }
 .tt-secondary { display: flex; gap: 8px; }
 .tt-secondary .btn { flex: 1; }
-.tt-result { display: flex; align-items: center; gap: 14px; padding: 10px 12px; border-radius: 12px; background: var(--pumpkin-bg); border: 1px solid var(--pumpkin-line); animation: pop .28s ease-out; }
+.tt-result { display: flex; align-items: flex-start; gap: 14px; padding: 10px 12px; border-radius: 12px; background: var(--pumpkin-bg); border: 1px solid var(--pumpkin-line); animation: pop .28s ease-out; }
 .tt-candy { width: 64px; height: 64px; object-fit: contain; flex: none; }
 .tt-amount { font-size: 30px; font-weight: 700; line-height: 1.1; color: var(--pumpkin); }
 .tt-line { margin-top: 2px; overflow-wrap: anywhere; }
 @media (prefers-reduced-motion: reduce) { .tt-result { animation: none; } }
-.tt-copy { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: start; }
-.tt-copy-buttons { display: grid; gap: 6px; }
 .tt-attach { width: 100%; max-width: 480px; height: auto; border-radius: 6px; }
 
 /* Discord-look leaderboard (Discord's dark theme colors). */
@@ -609,3 +607,17 @@
 .tt-add-form { display: flex; flex-wrap: wrap; align-items: end; gap: 10px; margin: 10px 0 6px; }
 .tt-add-form .field { flex: 1 1 200px; margin: 0; }
 .tt-add-form .tt-add-candy { flex: 0 1 130px; }
+
+/* Result: the two pastes as numbered steps, Discord code tucked away */
+.tt-result-body { display: grid; gap: 8px; min-width: 0; flex: 1; }
+.tt-steps { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+.tt-step { display: inline-flex; align-items: center; gap: 8px; }
+.tt-step-n { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--pumpkin); color: #1a1208; font-size: 13px; font-weight: 700; }
+.tt-step.done { opacity: .75; }
+.tt-step.done .tt-step-n { background: #3ba55d; color: #fff; }
+.tt-kbd { font-family: var(--ui); font-size: 11px; line-height: 1; padding: 3px 5px; border: 1px solid var(--line-strong); border-radius: 4px; color: var(--muted); }
+.tt-knock .tt-kbd { margin-left: 6px; }
+@media (hover: none) { .tt-kbd { display: none; } }
+.tt-code summary { cursor: pointer; color: var(--muted); font-size: 13px; }
+.tt-code summary:hover { color: var(--text); }
+.tt-code textarea { margin-top: 6px; }
