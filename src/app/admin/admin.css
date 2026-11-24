@@ -234,37 +234,7 @@
 .tt-players-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
 .tt-players-head h3 { font-size: 18px; font-weight: 700; }
 .tt-search { width: 200px; min-height: 36px; padding: 6px 10px; }
-.tt-tiles { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; }
-.tt-tile { width: 100%; display: grid; justify-items: center; gap: 4px; padding: 10px 6px 8px; border-radius: 12px; border: 1px solid var(--line); background: var(--panel-2); cursor: pointer; text-align: center; }
-.tt-tile:hover { border-color: var(--pumpkin); }
-.tt-tile.active { border-color: var(--pumpkin); box-shadow: 0 0 0 2px var(--pumpkin) inset; background: var(--pumpkin-bg); }
-.tt-tile.used:not(.active) { opacity: .55; }
-.tt-tile-name { max-width: 100%; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.tt-tile-meta { display: flex; align-items: center; gap: 6px; font-family: var(--ui); font-size: 12px; }
-.tt-tile-candy { font-weight: 700; }
-.tt-dot { color: var(--muted); }
-.tt-dot.ready { color: var(--pumpkin); font-weight: 700; }
 
-.tt-door { display: grid; gap: 12px; padding: 14px; border-radius: 14px; border: 2px dashed var(--pumpkin-line); background: #17130f; }
-.tt-door-head { display: flex; align-items: center; gap: 12px; }
-.tt-door-who h2 { font-size: 22px; line-height: 1.1; overflow-wrap: anywhere; }
-.tt-door-who p { font-family: var(--ui); font-size: 14px; color: var(--muted); }
-.tt-actions { display: grid; gap: 8px; }
-.tt-bonus { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; padding: 8px 10px; border: 1px dashed var(--line-strong); border-radius: 10px; font-family: var(--ui); font-size: 14px; }
-.tt-bonus strong { color: var(--pumpkin); }
-.tt-bonus-buttons { display: flex; gap: 6px; }
-.tt-bonus-add { color: var(--pumpkin); border-color: var(--pumpkin-line); }
-.tt-bonus-note { color: var(--pumpkin); }
-.tt-knock { background: linear-gradient(#ff9d54, #f07a1e); border-color: #b8560e; color: #241200; width: 100%; }
-.tt-knock { display: flex; align-items: center; justify-content: center; gap: 10px; }
-.tt-knock-icon { width: 32px; height: 32px; object-fit: contain; flex: none; }
-.tt-knock:hover:not(:disabled) { background: linear-gradient(#ffad6e, #f5862e); }
-.tt-secondary { display: flex; gap: 8px; }
-.tt-secondary .btn { flex: 1; }
-.tt-result { display: flex; align-items: flex-start; gap: 14px; padding: 10px 12px; border-radius: 12px; background: var(--pumpkin-bg); border: 1px solid var(--pumpkin-line); animation: pop .28s ease-out; }
-.tt-candy { width: 64px; height: 64px; object-fit: contain; flex: none; }
-.tt-amount { font-size: 30px; font-weight: 700; line-height: 1.1; color: var(--pumpkin); }
-.tt-line { margin-top: 2px; overflow-wrap: anywhere; }
 @media (prefers-reduced-motion: reduce) { .tt-result { animation: none; } }
 .tt-attach { width: 100%; max-width: 480px; height: auto; border-radius: 6px; }
 
@@ -591,7 +561,6 @@
 .liatao-toggle input { width: 18px; height: 18px; accent-color: #e57fb4; flex: none; }
 .liatao-toggle .liatao-icon { width: 22px; height: 22px; }
 .ev-row-candy .liatao-icon { margin-right: 4px; width: 16px; height: 16px; }
-.tt-tile-meta .liatao-icon { width: 16px; height: 16px; }
 
 /* Events: give / deduct switch. */
 .ev-mode { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 8px 0 4px; }
@@ -609,15 +578,61 @@
 .tt-add-form .tt-add-candy { flex: 0 1 130px; }
 
 /* Result: the two pastes as numbered steps, Discord code tucked away */
-.tt-result-body { display: grid; gap: 8px; min-width: 0; flex: 1; }
-.tt-steps { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
-.tt-step { display: inline-flex; align-items: center; gap: 8px; }
-.tt-step-n { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--pumpkin); color: #1a1208; font-size: 13px; font-weight: 700; }
-.tt-step.done { opacity: .75; }
-.tt-step.done .tt-step-n { background: #3ba55d; color: #fff; }
-.tt-kbd { font-family: var(--ui); font-size: 11px; line-height: 1; padding: 3px 5px; border: 1px solid var(--line-strong); border-radius: 4px; color: var(--muted); }
-.tt-knock .tt-kbd { margin-left: 6px; }
-@media (hover: none) { .tt-kbd { display: none; } }
-.tt-code summary { cursor: pointer; color: var(--muted); font-size: 13px; }
-.tt-code summary:hover { color: var(--text); }
+
+/* ---------- Trick-or-Treat: doorstep console + compact tiles ---------- */
+.tt-door { display: grid; gap: 10px; padding: 12px; border-radius: 14px; border: 1px solid var(--pumpkin-line); background: #17130f; }
+.tt-door-top { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); align-items: center; gap: 12px; }
+.tt-door-who { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.tt-door-who h2 { display: flex; align-items: center; gap: 6px; font-size: 20px; line-height: 1.1; overflow-wrap: anywhere; }
+.tt-door-who p { font-family: var(--ui); font-size: 13px; color: var(--muted); }
+.tt-door-who p.ready { color: var(--pumpkin); font-weight: 700; }
+.tt-door-empty { color: var(--muted); font-family: var(--ui); font-size: 14px; }
+.tt-knock { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; background: linear-gradient(#ff9d54, #f07a1e); border-color: #b8560e; color: #241200; }
+
+/* Keycaps: the key IS the icon. */
+.tt-key { display: inline-grid; place-items: center; min-width: 26px; height: 26px; padding: 0 6px; border-radius: 6px; border: 1px solid #0006; border-bottom-width: 3px; background: #fff3; font-family: var(--ui); font-size: 14px; font-weight: 700; line-height: 1; color: inherit; }
+.tt-key-wide { min-width: 34px; }
+
+.tt-result { display: grid; gap: 8px; padding: 10px 12px; border-radius: 12px; background: var(--pumpkin-bg); animation: pop .28s ease-out; }
+.tt-result-main { display: flex; align-items: center; gap: 12px; }
+.tt-amount { flex: none; font-size: 34px; font-weight: 700; line-height: 1; color: var(--pumpkin); }
+.tt-result-text { min-width: 0; }
+.tt-line { overflow-wrap: anywhere; line-height: 1.35; }
+.tt-keys { display: flex; flex-wrap: wrap; gap: 8px; }
+.tt-keybtn { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 6px 14px 6px 7px; border-radius: 10px; border: 1px solid var(--pumpkin-line); background: #1d140c; color: var(--text); font-size: 15px; font-weight: 700; cursor: pointer; }
+.tt-keybtn .tt-key { background: var(--pumpkin); color: #241200; }
+.tt-keybtn:hover { border-color: var(--pumpkin); }
+.tt-keybtn.done { color: var(--muted); border-color: var(--line); }
+.tt-keybtn.done .tt-key { background: #3ba55d; color: #fff; }
+.tt-attach { width: 100%; max-width: 480px; height: auto; border-radius: 6px; }
+.tt-code summary { cursor: pointer; color: var(--muted); font-size: 12px; }
 .tt-code textarea { margin-top: 6px; }
+
+.tt-door-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; font-family: var(--ui); font-size: 13px; color: var(--muted); }
+.tt-link { background: none; border: 0; padding: 2px 0; color: var(--muted); font: inherit; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.tt-link:hover:not(:disabled) { color: var(--text); }
+.tt-link.danger:hover:not(:disabled) { color: #ff7a7a; }
+.tt-link:disabled { opacity: .4; cursor: default; }
+.tt-bonus { display: inline-flex; align-items: center; gap: 6px; margin-left: auto; }
+.tt-bonus strong { color: var(--pumpkin); }
+.tt-mini { width: 24px; height: 24px; border-radius: 6px; border: 1px solid var(--line-strong); background: var(--panel-2); color: var(--text); font-size: 15px; line-height: 1; cursor: pointer; }
+.tt-mini:disabled { opacity: .4; cursor: default; }
+
+.tt-tiles { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px; }
+.tt-tile { width: 100%; display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel-2); color: var(--text); cursor: pointer; text-align: left; }
+.tt-tile:hover { border-color: var(--pumpkin); }
+.tt-tile:focus-visible:not(.active) { outline: 2px solid var(--pumpkin); outline-offset: 1px; }
+.tt-tile.active { border-color: var(--pumpkin); box-shadow: 0 0 0 1px var(--pumpkin) inset; background: var(--pumpkin-bg); }
+.tt-tile.used:not(.active) { opacity: .5; }
+.tt-tile-text { display: grid; min-width: 0; }
+.tt-tile-name { font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tt-tile-meta { display: flex; align-items: center; gap: 5px; font-family: var(--ui); font-size: 12px; }
+.tt-tile-meta .liatao-icon { width: 14px; height: 14px; }
+.tt-tile-candy { font-weight: 700; }
+.tt-dot { color: var(--muted); }
+.tt-dot.ready { color: var(--pumpkin); font-weight: 700; }
+
+@media (max-width: 599px) {
+  .tt-door-top { grid-template-columns: 1fr; }
+  .tt-bonus { margin-left: 0; }
+}
