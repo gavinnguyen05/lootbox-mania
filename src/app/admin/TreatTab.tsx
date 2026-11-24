@@ -148,7 +148,7 @@ export default function TreatTab({ players, neighbors, treats, treatsUsed, setFl
   }
 
   // Keyboard: arrows pick a player, Enter knocks, C copies the message,
-  // L the leaderboard, I the image. Ignored while typing in a field.
+  // L the leaderboard, I the image, + (or =) adds a bonus treat. Ignored while typing in a field.
   const keys = useRef<(e: KeyboardEvent) => void>(() => {});
   keys.current = (e: KeyboardEvent) => {
     if (e.metaKey || e.ctrlKey || e.altKey) return;
@@ -174,6 +174,8 @@ export default function TreatTab({ players, neighbors, treats, treatsUsed, setFl
       if (selected && !busy && leftFor(selected.id) > 0) treat();
     } else if (k === "c" && shown?.discordText) {
       e.preventDefault(); copyMessage(shown.discordText);
+    } else if ((k === "+" || k === "=") && selected) {
+      e.preventDefault(); if (!busy) changeBonus(1);
     } else if (k === "l") {
       e.preventDefault(); copyBoard();
     } else if (k === "i" && shown?.result?.attach_image) {
@@ -301,7 +303,9 @@ export default function TreatTab({ players, neighbors, treats, treatsUsed, setFl
                 <span className="tt-bonus" title="For requests made before a reset. Never expire.">
                   Bonus treats <strong>{selected.bonus_treats}</strong>
                   <button className="tt-mini" disabled={busy || selected.bonus_treats < 1} onClick={() => changeBonus(-1)} aria-label="Remove one bonus treat">−</button>
-                  <button className="tt-mini" disabled={busy} onClick={() => changeBonus(1)} aria-label="Add one bonus treat">+</button>
+                  <button className="tt-keybtn tt-bonus-add" disabled={busy} onClick={() => changeBonus(1)} aria-label="Add one bonus treat (+)">
+                    <kbd className="tt-key">+</kbd>Bonus treat
+                  </button>
                 </span>
               </div>
             )}

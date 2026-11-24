@@ -636,3 +636,6 @@
   .tt-door-top { grid-template-columns: 1fr; }
   .tt-bonus { margin-left: 0; }
 }
+.tt-bonus-add { min-height: 36px; font-size: 14px; margin-left: 4px; }
+.tt-bonus-add:disabled { opacity: .5; cursor: default; }
+.tt-bonus .tt-mini { width: 30px; height: 30px; }
