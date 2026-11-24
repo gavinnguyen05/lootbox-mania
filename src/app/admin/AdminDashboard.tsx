@@ -67,7 +67,7 @@ type Shared = {
 };
 
 export default function AdminDashboard(props: Props) {
-  const [tab, setTab] = useState<Tab>("open");
+  const [tab, setTab] = useState<Tab>("treat");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [flash, setFlash] = useState<ActionResult | null>(null);
 
