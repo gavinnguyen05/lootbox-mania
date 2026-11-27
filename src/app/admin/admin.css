@@ -639,3 +639,14 @@
 .tt-bonus-add { min-height: 36px; font-size: 14px; margin-left: 4px; }
 .tt-bonus-add:disabled { opacity: .5; cursor: default; }
 .tt-bonus .tt-mini { width: 30px; height: 30px; }
+
+/* Candy Island: animation in parts (more out than the animation shows at once) */
+.isl-parts { display: grid; gap: 8px; margin: 14px 0 10px; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--line-strong); background: var(--panel); }
+.isl-parts-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.isl-parts-head h3 { font-size: 18px; }
+.isl-parts-nav { display: flex; gap: 6px; }
+.isl-parts-list { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.isl-part-chip { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 6px 14px 6px 6px; border-radius: 10px; border: 1px solid var(--line-strong); background: var(--panel-2); color: var(--text); font-size: 15px; cursor: pointer; }
+.isl-part-chip:hover:not(:disabled) { border-color: #ff7a7a; }
+.isl-part-chip.on { border-color: #ff7a7a; background: #2a1414; color: #ffc2c2; font-weight: 700; }
+.isl-part-chip:disabled { cursor: default; }

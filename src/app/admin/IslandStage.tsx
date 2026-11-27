@@ -45,7 +45,7 @@ const ASPECT = BG.height / BG.width;
 const COUNTDOWN_FROM = 3;
 
 
-export default function IslandStage({ players, outIds, atRiskIds, immuneId, safeIds, latestRound, toRemain, onLockChange }: {
+export default function IslandStage({ players, outIds, atRiskIds, immuneId, safeIds, latestRound, toRemain, onLockChange, pickHint = null }: {
   players: AdminPlayer[];
   /** Out in an EARLIER round: greyed automatically, no marshmallow. */
   outIds: Set<string>;
@@ -55,6 +55,8 @@ export default function IslandStage({ players, outIds, atRiskIds, immuneId, safe
   immuneId: string | null;
   /** Drawn (safe) in the latest round, for the quick "give all" button. */
   safeIds: string[];
+  /** Shown instead of starting while the round is played in parts and this part has no pick yet. */
+  pickHint?: string | null;
   latestRound: number | null;
   /** "How many should remain" from the draw box; drives the countdown before any draw. */
   toRemain: number;
@@ -170,7 +172,7 @@ export default function IslandStage({ players, outIds, atRiskIds, immuneId, safe
   }, [order.join(",")]);
   const seq = useFinalSequence(getInput, giveOne, regroup);
   const running = seq.status === "running";
-  const notReady = running ? null : validateSequence(live.current);
+  const notReady = running ? null : pickHint ?? validateSequence(live.current);
 
   useEffect(() => { onLockChange(running); }, [running, onLockChange]);
   useEffect(() => { if (running) setHover(null); }, [running]);
@@ -181,6 +183,8 @@ export default function IslandStage({ players, outIds, atRiskIds, immuneId, safe
     if (firstKey.current === atRiskKey) return;
     firstKey.current = atRiskKey;
     seq.clear();
+    // New draw, undo, or the next part: everyone starts waiting again, back on their own stumps.
+    setSafe(new Set());
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [atRiskKey]);
 

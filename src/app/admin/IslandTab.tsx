@@ -4,13 +4,14 @@
 // skip every later round. Undo brings the latest round's left-overs back;
 // Start over begins a new game with everyone.
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { AboutMe, AdminPlayer, IslandState } from "@/lib/types";
 import { islandName } from "./islandNames";
 import { islandMessage } from "@/lib/candy";
 import Avatar from "@/components/Avatar";
 import IslandStage from "./IslandStage";
+import { FINAL_AT_RISK } from "./finalSequence";
 import DockScene from "./DockScene";
 import Image from "next/image";
 import { islandReset, islandRun, islandSetImmunity, islandUndo, type ActionResult, type IslandActionResult } from "./actions";
@@ -45,6 +46,24 @@ export default function IslandTab({ players, island, about, setFlash }: {
   // Locked while the stage's final sequence runs, so nothing can change the round underneath it.
   const [locked, setLocked] = useState(false);
   const latest = island.rounds[island.rounds.length - 1];
+  // More out than the animation can show at once: it plays in parts of up to 2.
+  // Part 1 has everyone (the later parts' players get marshmallows). Each later part
+  // drops the players who went out in the parts before it.
+  const leftOver = latest?.remaining ?? [];
+  const [doneParts, setDoneParts] = useState<string[][]>([]);
+  const [partPick, setPartPick] = useState<string[]>([]);
+  useEffect(() => { setDoneParts([]); setPartPick([]); }, [latest?.id]);
+  const inParts = leftOver.length > FINAL_AT_RISK;
+  const partRest = leftOver.filter((id) => !doneParts.flat().includes(id));
+  const lastPart = partRest.length <= FINAL_AT_RISK;
+  const partAtRisk = !inParts ? leftOver : lastPart ? partRest : partPick;
+  const partCount = Math.ceil(leftOver.length / FINAL_AT_RISK);
+  const partOutIds = useMemo(() => new Set([...stageOutIds, ...doneParts.flat()]), [stageOutIds, doneParts]);
+  const togglePick = (id: string) => setPartPick((p) => p.includes(id) ? p.filter((x) => x !== id)
+    : p.length < FINAL_AT_RISK ? [...p, id] : p);
+  const nextPart = () => { setDoneParts((d) => [...d, partPick]); setPartPick([]); };
+  const prevPart = () => { setPartPick(doneParts[doneParts.length - 1] ?? []); setDoneParts((d) => d.slice(0, -1)); };
+
   const n = Number(remaining);
   const nOk = Number.isInteger(n) && n >= 1 && n < onIsland.length;
   const name = (id: string) => (byId[id] ? islandName(byId[id]) : "Removed player");
@@ -194,10 +213,41 @@ export default function IslandTab({ players, island, about, setFlash }: {
         </section>
       </div>
 
-      <IslandStage players={players} outIds={stageOutIds} atRiskIds={latestRound?.remaining ?? []} immuneId={latestRound?.immune_id ?? null}
+      {inParts && (
+        <section className="isl-parts" aria-labelledby="isl-parts-h">
+          <div className="isl-parts-head">
+            <h3 id="isl-parts-h">Animation part {doneParts.length + 1} of {partCount}</h3>
+            <div className="isl-parts-nav">
+              <button className="btn btn-sm" disabled={locked || doneParts.length === 0} onClick={prevPart}>← Previous part</button>
+              <button className="btn btn-sm btn-primary" disabled={locked || lastPart || partPick.length !== FINAL_AT_RISK} onClick={nextPart}>Next part →</button>
+            </div>
+          </div>
+          <p className="muted small">
+            {lastPart
+              ? `Last part: ${partRest.map(name).join(" and ")} go${partRest.length === 1 ? "es" : ""} out.${doneParts.length ? ` ${doneParts.flat().map(name).join(", ")} ${doneParts.flat().length === 1 ? "is" : "are"} gone from the stage.` : ""}`
+              : `${leftOver.length} are out this round, and the animation does ${FINAL_AT_RISK} at a time. Pick who goes out in this part. The others get marshmallows this time.`}
+          </p>
+          <ul className="isl-parts-list">
+            {partRest.map((id) => {
+              const on = lastPart || partPick.includes(id);
+              return (
+                <li key={id}>
+                  <button className={`isl-part-chip${on ? " on" : ""}`} disabled={locked || lastPart} aria-pressed={on} onClick={() => togglePick(id)}>
+                    <Avatar src={byId[id]?.discord_avatar_url ?? null} name={name(id)} size={26} />
+                    {name(id)}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
+
+      <IslandStage players={players} outIds={partOutIds} atRiskIds={partAtRisk}
+        pickHint={inParts && !lastPart && partPick.length !== FINAL_AT_RISK ? `Pick ${FINAL_AT_RISK} players for part ${doneParts.length + 1} above.` : null} immuneId={latestRound?.immune_id ?? null}
         safeIds={latest?.picked ?? []} latestRound={latest?.round ?? null} toRemain={n} onLockChange={setLocked} />
 
-      <DockScene players={players} eliminatedIds={latestRound?.remaining ?? []} about={about} />
+      <DockScene players={players} eliminatedIds={inParts ? partAtRisk : leftOver} about={about} />
     </div>
   );
 }

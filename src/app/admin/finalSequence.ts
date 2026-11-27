@@ -11,7 +11,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
-/** The sequence ends with exactly this many campers left unsafe. */
+/** The sequence ends with at most this many campers left unsafe (1 or 2). Bigger draws play in parts. */
 export const FINAL_AT_RISK = 2;
 /** It can start once this many (or fewer) campers are unsafe... and at least FINAL_AT_RISK + 1. */
 export const MIN_UNSAFE_TO_START = FINAL_AT_RISK + 1;
@@ -75,8 +75,8 @@ export interface SequenceInput {
 export function validateSequence({ participants, atRisk, safe, nameOf, immuneId }: SequenceInput): string | null {
   if (immuneId && atRisk.includes(immuneId)) return `${nameOf(immuneId)} has immunity but is listed at risk. Undo the round and draw again.`;
   if (atRisk.length === 0) return "Run a Candy Island draw first: its left-over players are the ones at risk.";
-  if (atRisk.length !== FINAL_AT_RISK) {
-    return `The latest draw left ${atRisk.length} player${atRisk.length === 1 ? "" : "s"} at risk; the animation needs exactly ${FINAL_AT_RISK}.`;
+  if (atRisk.length > FINAL_AT_RISK) {
+    return `The animation does ${FINAL_AT_RISK} at a time. Pick who goes out in this part above.`;
   }
   const inCeremony = new Set(participants);
   for (const id of atRisk) {
@@ -84,8 +84,8 @@ export function validateSequence({ participants, atRisk, safe, nameOf, immuneId 
     if (safe.has(id)) return `${nameOf(id)} is predetermined to be at risk but already has a marshmallow. Take it back first.`;
   }
   const unsafe = participants.filter((id) => !safe.has(id));
-  if (unsafe.length < MIN_UNSAFE_TO_START) {
-    return `Needs at least ${MIN_UNSAFE_TO_START} campers still waiting for a marshmallow (now ${unsafe.length}).`;
+  if (unsafe.length < atRisk.length + 1) {
+    return `Needs at least ${atRisk.length + 1} campers still waiting for a marshmallow (now ${unsafe.length}).`;
   }
   return null;
 }
